@@ -222,6 +222,11 @@
             const gameOverModal = document.getElementById('game-over-modal');
             const restartBtn = document.getElementById('restart-btn');
 
+            function formatId(id) {
+                // 숫자를 찾아 <sub> 태그로 감싸서 아래첨자로 만듭니다
+                return id.replace(/(\d+)/g, '<sub>$1</sub>');
+            }
+
             function shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -249,7 +254,7 @@
                 const pieceInfo = PIECES.find(p => p.id === pieceId);
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `piece w-14 h-14 md:w-20 md:h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-md ${pieceInfo.color}`;
-                pieceEl.textContent = pieceInfo.id;
+                pieceEl.innerHTML = formatId(pieceInfo.id);
                 pieceEl.dataset.id = pieceId;
 
                 pieceEl.addEventListener('click', (e) => {
@@ -296,7 +301,7 @@
                         const pieceInfo = PIECES.find(p => p.id === graveyardState[i]);
                         slot.classList.remove('bg-gray-200');
                         slot.classList.add(pieceInfo.color, 'opacity-50');
-                        slot.textContent = pieceInfo.id;
+                        slot.innerHTML = formatId(pieceInfo.id);
                         slot.classList.add('text-white', 'font-bold');
                     }
                     graveyardSlots.appendChild(slot);
@@ -489,7 +494,7 @@
                         winnerCard.innerHTML = `
                             <div class="text-4xl mb-2">${medals[i]}</div>
                             <div class="text-2xl font-bold">${i + 1}등</div>
-                            <div class="text-3xl font-bold mt-2">${pieceInfo.id}</div>
+                            <div class="text-3xl font-bold mt-2">${formatId(pieceInfo.id)}</div>
                         `;
                         winnersList.appendChild(winnerCard);
                     });
