@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분자 보드게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            touch-action: manipulation; /* 모바일에서 더블 탭 확대 방지 */
+        }
+        .piece {
+            transition: all 0.5s ease-in-out;
+            cursor: pointer;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+        }
+        .gauge-slot, .graveyard-slot {
+            transition: background-color 0.3s;
+        }
+        #card-modal {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .card-button {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .card-button:hover:not(:disabled) {
+            transform: translateY(-4px);
+        }
+        .card-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        #game-over-modal {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .winner-card {
+            animation: slideInUp 0.5s ease-in-out forwards;
+            opacity: 0;
+        }
+        .winner-card:nth-child(1) { animation-delay: 0.2s; }
+        .winner-card:nth-child(2) { animation-delay: 0.4s; }
+        .winner-card:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+                filter: blur(5px);
+            }
+        }
+
+        .exploding {
+            animation: explode 0.5s ease-in-out forwards;
+        }
+
+        /* 스크롤바 숨기기 */
+        body {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, and Opera */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">분자 서바이벌 보드게임</h1>
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- 부피 게이지 -->
+            <div id="volume-gauge" class="flex-shrink-0 w-full md:w-64 bg-white rounded-xl shadow-lg p-2 flex flex-row md:flex-col justify-around md:justify-start gap-1">
+            </div>
+
+            <!-- 게임 공간 (죽은 말 & 정보) -->
+            <div class="flex-grow grid grid-rows-9 gap-4">
+                <!-- 256L ~ 16L -->
+                <div id="graveyard" class="bg-white rounded-xl shadow-lg p-4 row-span-5 flex flex-col">
+                    <h2 class="text-xl font-bold text-center text-gray-700 mb-4 flex-shrink-0">죽은 말</h2>
+                    <div id="graveyard-slots" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-3 gap-2 justify-items-center content-start flex-grow">
+                    </div>
+                </div>
+                <!-- 8L ~ 1L -->
+                <!-- 분자 정보 컨테이너 -->
+                <div id="molecule-info-container" class="bg-white rounded-xl shadow-lg p-4 row-span-4 flex flex-col overflow-y-auto">
+                    <!-- JS로 내용이 채워집니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 카드 모달 (초기 버전: 2열 그리드, 압력 텍스트 제거, 2 카드 제거) -->
+    <div id="card-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center">
+        <div id="card-container" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-md relative">
+            <h3 class="text-xl font-bold mb-4 text-center">카드를 선택하세요</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button data-card="1/2" class="card-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">1/2</button>
+                <button data-card="1/4" class="card-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">1/4</button>
+                <button data-card="1/8" class="card-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">1/8</button>
+                <button data-card="4" class="card-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">4</button>
+                <button data-card="bomb" id="bomb-card" class="card-button bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg">폭탄</button>
+                <button data-card="absolute" class="card-button bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg">절대 카드</button>
+            </div>
+            <button id="close-modal-btn" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+    </div>
+
+    <!-- 게임 종료 모달 -->
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-gradient-to-br from-blue-400 to-purple-500 flex flex-col items-center justify-center p-4">
+        <div class="text-center text-white">
+            <h2 class="text-5xl font-extrabold mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">게임 종료!</h2>
+            <p class="text-2xl mb-8">최종 생존자들입니다!</p>
+            <div id="winners-list" class="flex flex-col md:flex-row gap-6 justify-center items-center mb-10">
+                <!-- Winners will be injected here -->
+            </div>
+            <button id="restart-btn" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-4 px-8 rounded-full text-2xl shadow-lg transform hover:scale-105 transition-transform">
+                다음 판!
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const PIECES = [
+                // 단원자
+                { id: 'He', type: 'monatomic', color: 'bg-red-400' },
+                { id: 'Ne', type: 'monatomic', color: 'bg-orange-400' },
+                { id: 'Ar', type: 'monatomic', color: 'bg-amber-400' },
+                // 이원자
+                { id: 'H2', type: 'diatomic', color: 'bg-lime-400' },
+                { id: 'O2', type: 'diatomic', color: 'bg-green-400' },
+                { id: 'N2', type: 'diatomic', color: 'bg-emerald-400' },
+                // 삼원자
+                { id: 'H2O', type: 'triatomic', color: 'bg-cyan-400' },
+                { id: 'CO2', type: 'triatomic', color: 'bg-sky-400' },
+                { id: 'O3', type: 'triatomic', color: 'bg-indigo-400' },
+            ];
+            const VOLUMES = [256, 128, 64, 32, 16, 8, 4, 2, 1];
+            const MOLECULE_DATA = {
+                'He': {
+                    name: '헬륨 (Helium)',
+                    modelUrl: 'https://placehold.co/200x150/f87171/ffffff?text=He&font=sans',
+                    features: '무색, 무취의 비활성 기체로, 우주에서 수소 다음으로 풍부한 원소입니다. 매우 가볍고 안전하여 공기보다 쉽게 떠오릅니다.',
+                    usage: '파티용 풍선이나 비행선을 띄우는 데 사용되며, MRI 장비의 초전도 자석 냉각, 용접 시 불활성 보호막으로도 중요하게 쓰입니다.'
+                },
+                'Ne': {
+                    name: '네온 (Neon)',
+                    modelUrl: 'https://placehold.co/200x150/fb923c/ffffff?text=Ne&font=sans',
+                    features: '비활성 기체 중 하나로, 전기를 통과시키면 밝은 주황색 빛을 내는 특징이 있습니다. 공기 중에 매우 적은 양이 포함되어 있습니다.',
+                    usage: '화려한 도시의 밤을 만드는 네온사인 광고판에 주로 사용되며, TV 브라운관이나 레이저 등 특수 장비에도 활용됩니다.'
+                },
+                'Ar': {
+                    name: '아르곤 (Argon)',
+                    modelUrl: 'https://placehold.co/200x150/fbbf24/ffffff?text=Ar&font=sans',
+                    features: '지구 대기 중에 질소, 산소 다음으로 많은 비활성 기체입니다. 다른 원소와 거의 반응하지 않는 안정적인 성질을 가집니다.',
+                    usage: '백열전구 내부를 채워 필라멘트가 타는 것을 막거나, 고품질 용접 시 산화를 방지하는 보호 가스로 널리 사용됩니다.'
+                },
+                'H2': {
+                    name: '수소 (Hydrogen)',
+                    modelUrl: 'https://placehold.co/200x150/a3e635/ffffff?text=H₂&font=sans',
+                    features: '가장 가벼운 원소이며 우주에서 가장 풍부한 물질입니다. 가연성이 매우 높아 불과 만나면 폭발할 위험이 있습니다.',
+                    usage: '물을 만드는 구성 요소이며, 미래의 친환경 에너지원으로 주목받는 수소 자동차의 연료, 우주 왕복선의 로켓 연료로 사용됩니다.'
+                },
+                'O2': {
+                    name: '산소 (Oxygen)',
+                    modelUrl: 'https://placehold.co/200x150/4ade80/ffffff?text=O₂&font=sans',
+                    features: '생명체가 호흡하는 데 필수적인 기체로, 지구 대기의 약 21%를 차지합니다. 다른 물질이 타는 것을 돕는 조연소성 기체입니다.',
+                    usage: '병원에서 환자의 호흡을 돕거나, 철을 생산하는 제철 공정, 금속을 절단하고 용접하는 데 필수적으로 사용됩니다.'
+                },
+                'N2': {
+                    name: '질소 (Nitrogen)',
+                    modelUrl: 'https://placehold.co/200x150/34d399/ffffff?text=N₂&font=sans',
+                    features: '지구 대기의 약 78%를 차지하는 가장 흔한 기체입니다. 매우 안정적이어서 다른 물질과 잘 반응하지 않습니다.',
+                    usage: '과자 봉지 안에 내용물이 부서지지 않고 신선하게 유지되도록 채우는 용도나, 식물 성장에 필수적인 비료의 원료로 사용됩니다.'
+                },
+                'H2O': {
+                    name: '물 (Water)',
+                    modelUrl: 'https://placehold.co/200x150/22d3ee/ffffff?text=H₂O&font=sans',
+                    features: '지구 표면의 약 71%를 덮고 있으며, 생명 유지에 필수적인 액체입니다. 고체(얼음), 액체(물), 기체(수증기) 세 가지 상태로 존재합니다.',
+                    usage: '우리가 마시고, 씻고, 요리하는 모든 활동에 사용되며, 농업용수나 수력 발전을 통한 전기 생산 등에도 활용됩니다.'
+                },
+                'CO2': {
+                    name: '이산화탄소 (Carbon Dioxide)',
+                    modelUrl: 'https://placehold.co/200x150/38bdf8/ffffff?text=CO₂&font=sans',
+                    features: '사람의 날숨에 포함된 기체이며, 식물이 광합성을 통해 양분을 만드는 데 사용됩니다. 지구 온난화의 주된 원인이 되는 온실가스이기도 합니다.',
+                    usage: '톡 쏘는 맛을 내는 탄산음료를 만들거나, 불을 끄는 소화기, 공연에서 안개 효과를 내는 드라이아이스의 원료로 쓰입니다.'
+                },
+                'O3': {
+                    name: '오존 (Ozone)',
+                    modelUrl: 'https://placehold.co/200x150/818cf8/ffffff?text=O₃&font=sans',
+                    features: '특유의 냄새를 가진 푸른빛 기체로, 강력한 산화력을 가지고 있습니다. 성층권의 오존층은 지구를 자외선으로부터 보호하는 중요한 역할을 합니다.',
+                    usage: '강력한 살균 및 소독 능력을 이용해 물을 정화하거나, 수영장 소독, 공기 청정 등에 제한적으로 사용됩니다.'
+                }
+            };
+
+            let gaugeState = []; // 보드 위 말들의 상태 (ID 배열)
+            let graveyardState = []; // 죽은 말들의 상태 (ID 배열)
+            let selectedPiece = { id: null, index: -1 };
+
+            const volumeGauge = document.getElementById('volume-gauge');
+            const graveyardSlots = document.getElementById('graveyard-slots');
+            const cardModal = document.getElementById('card-modal');
+            const cardContainer = document.getElementById('card-container');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const gameOverModal = document.getElementById('game-over-modal');
+            const restartBtn = document.getElementById('restart-btn');
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function initGame() {
+                // 타입별로 말 섞기
+                const monatomic = shuffle(PIECES.filter(p => p.type === 'monatomic').map(p => p.id));
+                const diatomic = shuffle(PIECES.filter(p => p.type === 'diatomic').map(p => p.id));
+                const triatomic = shuffle(PIECES.filter(p => p.type === 'triatomic').map(p => p.id));
+                
+                // 순서대로 배치
+                gaugeState = [...triatomic, ...diatomic, ...monatomic];
+                graveyardState = [];
+                
+                gameOverModal.classList.add('hidden');
+                renderBoard();
+                updateMoleculeInfo();
+            }
+            
+            function createPieceElement(pieceId) {
+                const pieceInfo = PIECES.find(p => p.id === pieceId);
+                const pieceEl = document.createElement('div');
+                pieceEl.className = `piece w-14 h-14 md:w-20 md:h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-md ${pieceInfo.color}`;
+                pieceEl.textContent = pieceInfo.id;
+                pieceEl.dataset.id = pieceId;
+
+                pieceEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = gaugeState.indexOf(pieceId);
+                    if (index > -1) {
+                        selectedPiece = { id: pieceId, index: index };
+                        openCardModal();
+                    }
+                });
+                return pieceEl;
+            }
+
+            function renderBoard() {
+                // 부피 게이지 렌더링
+                volumeGauge.innerHTML = '';
+                VOLUMES.forEach((volume, index) => {
+                    const gaugeSlot = document.createElement('div');
+                    gaugeSlot.className = 'gauge-slot border-2 border-gray-200 rounded-lg flex items-center p-1 gap-2 h-16 md:h-auto';
+                    
+                    const volumeLabel = document.createElement('span');
+                    volumeLabel.className = 'text-sm font-semibold text-gray-500 w-12 text-right';
+                    volumeLabel.textContent = `${volume}L`;
+                    
+                    const pieceContainer = document.createElement('div');
+                    pieceContainer.className = 'flex-grow h-full flex items-center justify-center';
+
+                    if (gaugeState[index]) {
+                        const pieceEl = createPieceElement(gaugeState[index]);
+                         pieceContainer.appendChild(pieceEl);
+                    }
+                    
+                    gaugeSlot.appendChild(volumeLabel);
+                    gaugeSlot.appendChild(pieceContainer);
+                    volumeGauge.appendChild(gaugeSlot);
+                });
+
+                // 죽은 말 렌더링
+                graveyardSlots.innerHTML = '';
+                for(let i=0; i<6; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'graveyard-slot w-20 h-16 bg-gray-200 rounded-lg flex items-center justify-center';
+                    if (graveyardState[i]) {
+                        const pieceInfo = PIECES.find(p => p.id === graveyardState[i]);
+                        slot.classList.remove('bg-gray-200');
+                        slot.classList.add(pieceInfo.color, 'opacity-50');
+                        slot.textContent = pieceInfo.id;
+                        slot.classList.add('text-white', 'font-bold');
+                    }
+                    graveyardSlots.appendChild(slot);
+                }
+                
+                checkGameOver();
+            }
+
+            function openCardModal() {
+                // 폭탄 카드 활성화/비활성화
+                const bombCard = document.getElementById('bomb-card');
+                const isLastPiece = selectedPiece.index === gaugeState.length - 1;
+                bombCard.disabled = !isLastPiece;
+
+                cardModal.classList.remove('hidden');
+                cardModal.classList.add('flex');
+            }
+
+            function closeCardModal() {
+                cardModal.classList.add('hidden');
+                cardModal.classList.remove('flex');
+                selectedPiece = { id: null, index: -1 };
+            }
+            
+            function handleCardClick(effect) {
+                const { id, index } = selectedPiece;
+                if (!id) return;
+
+                closeCardModal();
+
+                if (effect === 'bomb' && index === gaugeState.length - 1) {
+                    animateBombEffect(index);
+                } else {
+                    const stateUpdateFunction = () => {
+                        let newIndex;
+                        switch (effect) {
+                            case '1/2':
+                                newIndex = Math.max(0, index - 1);
+                                if (newIndex !== index) movePiece(index, newIndex);
+                                break;
+                            case '1/4':
+                                newIndex = Math.max(0, index - 2);
+                                if (newIndex !== index) movePiece(index, newIndex);
+                                break;
+                            case '1/8':
+                                newIndex = Math.max(0, index - 3);
+                                if (newIndex !== index) movePiece(index, newIndex);
+                                break;
+                            case '4':
+                                newIndex = Math.min(gaugeState.length - 1, index + 2);
+                                if (newIndex !== index) movePiece(index, newIndex);
+                                break;
+                            case 'absolute':
+                                newIndex = gaugeState.length - 1;
+                                if (newIndex !== index) movePiece(index, newIndex);
+                                break;
+                        }
+                    };
+                    animateThenRender(stateUpdateFunction);
+                }
+            }
+
+            function animateThenRender(updateLogic) {
+                const oldPositions = new Map();
+                // 애니메이션 전, 각 말의 이전 위치를 기록합니다.
+                document.querySelectorAll('.piece').forEach(p => {
+                    oldPositions.set(p.dataset.id, p.getBoundingClientRect());
+                });
+
+                // 게임의 상태(배열)를 업데이트합니다.
+                updateLogic();
+
+                // 업데이트된 상태로 보드를 다시 렌더링합니다. (이때 말들은 DOM상에서 최종 위치로 순간이동합니다)
+                renderBoard();
+
+                const piecesToAnimate = [];
+                document.querySelectorAll('.piece').forEach(p => {
+                    piecesToAnimate.push(p);
+                });
+
+                // FLIP 애니메이션 기법 (First, Last, Invert, Play)
+                piecesToAnimate.forEach(piece => {
+                    const oldPos = oldPositions.get(piece.dataset.id);
+                    if (!oldPos) return;
+                    
+                    const newPos = piece.getBoundingClientRect();
+
+                    const deltaX = oldPos.left - newPos.left;
+                    const deltaY = oldPos.top - newPos.top;
+                    
+                    // 움직임이 거의 없는 말은 애니메이션을 적용하지 않습니다.
+                    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
+
+                    // INVERT: 말이 이전 위치에 있는 것처럼 보이게 즉시 transform을 적용합니다. (애니메이션 없이)
+                    piece.style.transition = 'none';
+                    piece.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                });
+                
+                // 브라우저가 위의 스타일 변경을 렌더링할 시간을 줍니다.
+                // requestAnimationFrame을 사용하여 다음 프레임에서 애니메이션을 실행합니다.
+                requestAnimationFrame(() => {
+                     // PLAY: 이제 transition을 활성화하고 transform을 원래대로 되돌려 부드러운 애니메이션을 실행합니다.
+                    piecesToAnimate.forEach(piece => {
+                        piece.style.transition = 'transform 0.5s ease-in-out';
+                        piece.style.transform = ''; // 'translate(0, 0)'과 같습니다.
+                    });
+                });
+                
+                // 애니메이션이 끝난 후, 인라인 스타일을 정리하여 다음 애니메이션을 준비합니다.
+                setTimeout(() => {
+                    piecesToAnimate.forEach(piece => {
+                        piece.style.transition = '';
+                    });
+                }, 500);
+            }
+            
+            function animateBombEffect(index) {
+                const pieceId = gaugeState[index];
+                const pieceElement = document.querySelector(`.piece[data-id="${pieceId}"]`);
+
+                if (pieceElement) {
+                    pieceElement.classList.add('exploding');
+                    
+                    // 애니메이션 지속 시간(0.5초) 후에 상태 업데이트 및 재렌더링
+                    setTimeout(() => {
+                        killPiece(index);
+                        renderBoard();
+                    }, 500); 
+                } else {
+                    // 만약 엘리먼트를 찾지 못하면, 애니메이션 없이 바로 실행
+                    killPiece(index);
+                    renderBoard();
+                }
+            }
+
+            function movePiece(oldIndex, newIndex) {
+                const pieceId = gaugeState.splice(oldIndex, 1)[0];
+                gaugeState.splice(newIndex, 0, pieceId);
+            }
+
+            function killPiece(index) {
+                const killedPieceId = gaugeState.splice(index, 1)[0];
+                if(killedPieceId) {
+                    graveyardState.push(killedPieceId);
+                    updateMoleculeInfo();
+                }
+            }
+            
+            function updateMoleculeInfo() {
+                const infoContainer = document.getElementById('molecule-info-container');
+                const lastKilled = graveyardState.length > 0 ? graveyardState[graveyardState.length - 1] : null;
+
+                if (lastKilled && MOLECULE_DATA[lastKilled]) {
+                    const data = MOLECULE_DATA[lastKilled];
+                    infoContainer.innerHTML = `
+                        <h3 class="text-xl font-bold text-gray-800 mb-3 flex-shrink-0">${data.name}</h3>
+                        <div class="flex flex-col sm:flex-row gap-4 items-center flex-grow">
+                            <img src="${data.modelUrl}" alt="${data.name} 분자 모형" class="w-full sm:w-48 rounded-lg object-cover shadow-md">
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-gray-700 mt-2 sm:mt-0">특징</h4>
+                                <p class="text-gray-600 mb-2 text-sm">${data.features}</p>
+                                <h4 class="font-bold text-gray-700">실생활 활용</h4>
+                                <p class="text-gray-600 text-sm">${data.usage}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    infoContainer.innerHTML = `
+                        <div class="text-center text-gray-400 py-8">
+                            <p class="font-semibold">아직 죽은 말이 없습니다.</p>
+                            <p class="text-sm mt-1">가장 최근에 죽은 말의 정보가 여기에 표시됩니다.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            function checkGameOver() {
+                if (graveyardState.length >= 6) {
+                    gameOverModal.classList.remove('hidden');
+                    const winnersList = document.getElementById('winners-list');
+                    winnersList.innerHTML = '';
+                    
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const winnerPieces = gaugeState.slice(0, 3);
+                    
+                    winnerPieces.forEach((pieceId, i) => {
+                        const pieceInfo = PIECES.find(p => p.id === pieceId);
+                        const winnerCard = document.createElement('div');
+                        winnerCard.className = `winner-card p-6 rounded-xl shadow-lg text-center ${pieceInfo.color}`;
+                        winnerCard.innerHTML = `
+                            <div class="text-4xl mb-2">${medals[i]}</div>
+                            <div class="text-2xl font-bold">${i + 1}등</div>
+                            <div class="text-3xl font-bold mt-2">${pieceInfo.id}</div>
+                        `;
+                        winnersList.appendChild(winnerCard);
+                    });
+                }
+            }
+
+            // 이벤트 리스너 설정
+            cardContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.card-button')) {
+                    handleCardClick(e.target.dataset.card);
+                }
+            });
+            
+            closeModalBtn.addEventListener('click', closeCardModal);
+            cardModal.addEventListener('click', (e) => {
+                if(e.target === cardModal) closeCardModal();
+            });
+            restartBtn.addEventListener('click', initGame);
+
+            // 초기 게임 시작
+            initGame();
+        });
+    </script>
+</body>
+</html>
