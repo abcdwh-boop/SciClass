@@ -14,6 +14,20 @@
         canvas {
             background-color: #f8f9fa;
         }
+        /* 평균 블록의 기본 스타일 */
+        .avg-collision-block {
+            width: 100px; /* 버튼과 유사한 너비 */
+            height: 48px; /* 버튼과 유사한 높이 (px-6 py-3) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600; /* font-semibold */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            background-color: #ccc; /* 초기 배경색 */
+            color: #333; /* 텍스트 색상 */
+            transition: background-color 0.2s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
@@ -22,31 +36,29 @@
 
     <canvas id="simulationCanvas" width="500" height="500" class="border-2 border-black rounded-lg shadow-lg"></canvas>
 
-    <!-- 버튼 컨테이너 -->
-    <div class="flex space-x-4 mt-4">
-        <!-- 입자 추가 버튼 -->
-        <button id="addButton" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
+    <!-- 버튼 컨테이너 --><div class="flex space-x-4 mt-4">
+        <!-- 입자 추가 버튼 --><button id="addButton" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
             입자추가 (0)
         </button>
-        <!-- 온도 조절 버튼 (Up) -->
-        <button id="tempUpButton" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
+        <!-- 온도 조절 버튼 (Up) --><button id="tempUpButton" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
             온도 Up
         </button>
-        <!-- 온도 조절 버튼 (Down) -->
-        <button id="tempDownButton" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
+        <!-- 온도 조절 버튼 (Down) --><button id="tempDownButton" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
             온도 Dn
         </button>
+        <!-- 평균 충돌 횟수 블록 --><div id="avgCollisionBlock" class="avg-collision-block">
+            평균
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('simulationCanvas');
         const ctx = canvas.getContext('2d');
         const addButton = document.getElementById('addButton');
-        // const tempButton = document.getElementById('tempButton'); // 기존 버튼 제거
-        const tempUpButton = document.getElementById('tempUpButton'); // Up 버튼
-        const tempDownButton = document.getElementById('tempDownButton'); // Down 버튼
+        const tempUpButton = document.getElementById('tempUpButton');
+        const tempDownButton = document.getElementById('tempDownButton');
+        const avgCollisionBlock = document.getElementById('avgCollisionBlock'); // 평균 블록 엘리먼트
 
-        // 상자 크기 (캔버스 크기와 동일)
         const box = {
             width: canvas.width,
             height: canvas.height
@@ -56,9 +68,8 @@
         let particleCount = 0;
         let temperature = 0;
         const baseSpeed = 4;
-        const WALL_THICKNESS = 15; // 벽 두께 3배 증가 (기존 border-2에서 2px 였으므로 6px * 2 = 12px, canvas border도 있어 총 15px)
+        const WALL_THICKNESS = 15;
 
-        // 벽 섹션 배열 초기화
         const numWallSegments = 10;
         const wallSegments = {
             top: Array(numWallSegments).fill(0),
@@ -67,26 +78,37 @@
             right: Array(numWallSegments).fill(0)
         };
 
-        // 1초마다 충돌 횟수를 초기화하는 타이머
+        // 1초마다 충돌 횟수를 초기화하고 평균을 계산하는 타이머
         setInterval(() => {
+            let totalHits = 0;
+            let totalSegments = 0;
+
             for (const wall in wallSegments) {
-                wallSegments[wall].fill(0);
+                wallSegments[wall].forEach(hits => totalHits += hits);
+                totalSegments += wallSegments[wall].length;
+                wallSegments[wall].fill(0); // 충돌 횟수 초기화
             }
+
+            // 평균 충돌 횟수 계산
+            const averageHits = totalSegments > 0 ? totalHits / totalSegments : 0;
+            
+            // 평균 충돌 횟수에 따라 블록 색상 변경
+            avgCollisionBlock.style.backgroundColor = getWallColor(Math.min(5, Math.floor(averageHits))); // 5개 이상은 빨간색
+            avgCollisionBlock.style.color = 'white'; // 텍스트 색상을 흰색으로 변경하여 가독성 높임
+
         }, 1000); // 1000ms = 1초
 
-        // 온도를 기반으로 속도 배율 계산
         function calculateSpeedMultiplier() {
             return baseSpeed + (temperature * 0.2); 
         }
 
-        // 충돌 횟수에 따른 색상 매핑 함수
         function getWallColor(hits) {
             if (hits >= 5) return 'red';
             if (hits === 4) return 'orange';
-            if (hits === 3) return 'deeppink'; // 분홍색
-            if (hits === 2) return 'lime';     // 초록색 (더 밝은 초록색)
-            if (hits === 1) return 'dodgerblue'; // 파란색 (더 밝은 파란색)
-            return '#ccc'; // 기본 회색 (충돌 0회)
+            if (hits === 3) return 'deeppink';
+            if (hits === 2) return 'lime';
+            if (hits === 1) return 'dodgerblue';
+            return '#ccc';
         }
 
         class Particle {
@@ -117,18 +139,16 @@
                 // 왼쪽 또는 오른쪽 벽
                 if (this.x - this.radius < WALL_THICKNESS || this.x + this.radius > box.width - WALL_THICKNESS) {
                     this.vx *= -1;
-                    // 벽을 벗어나지 않도록 위치 보정
                     if (this.x - this.radius < WALL_THICKNESS) this.x = this.radius + WALL_THICKNESS;
                     if (this.x + this.radius > box.width - WALL_THICKNESS) this.x = box.width - this.radius - WALL_THICKNESS;
 
-                    // 충돌 횟수 증가
                     const segmentSize = (box.height - 2 * WALL_THICKNESS) / numWallSegments;
                     const segmentIndex = Math.floor((this.y - WALL_THICKNESS) / segmentSize);
-                    if (this.x < box.width / 2) { // 왼쪽 벽
+                    if (this.x < box.width / 2) {
                         if (segmentIndex >= 0 && segmentIndex < numWallSegments) {
                             wallSegments.left[segmentIndex]++;
                         }
-                    } else { // 오른쪽 벽
+                    } else {
                         if (segmentIndex >= 0 && segmentIndex < numWallSegments) {
                             wallSegments.right[segmentIndex]++;
                         }
@@ -138,18 +158,16 @@
                 // 위쪽 또는 아래쪽 벽
                 if (this.y - this.radius < WALL_THICKNESS || this.y + this.radius > box.height - WALL_THICKNESS) {
                     this.vy *= -1;
-                    // 벽을 벗어나지 않도록 위치 보정
                     if (this.y - this.radius < WALL_THICKNESS) this.y = this.radius + WALL_THICKNESS;
                     if (this.y + this.radius > box.height - WALL_THICKNESS) this.y = box.height - this.radius - WALL_THICKNESS;
 
-                    // 충돌 횟수 증가
                     const segmentSize = (box.width - 2 * WALL_THICKNESS) / numWallSegments;
                     const segmentIndex = Math.floor((this.x - WALL_THICKNESS) / segmentSize);
-                    if (this.y < box.height / 2) { // 위쪽 벽
+                    if (this.y < box.height / 2) {
                         if (segmentIndex >= 0 && segmentIndex < numWallSegments) {
                             wallSegments.top[segmentIndex]++;
                         }
-                    } else { // 아래쪽 벽
+                    } else {
                         if (segmentIndex >= 0 && segmentIndex < numWallSegments) {
                             wallSegments.bottom[segmentIndex]++;
                         }
@@ -158,9 +176,7 @@
             }
         }
 
-        // 호스 및 펌프 그리기 (정적) - 벽 섹션 그리기 포함
         function drawStaticElements() {
-            // 벽 섹션 그리기
             const segmentWidth = (box.width - 2 * WALL_THICKNESS) / numWallSegments;
             const segmentHeight = (box.height - 2 * WALL_THICKNESS) / numWallSegments;
 
@@ -197,18 +213,16 @@
             ctx.lineTo(box.width - WALL_THICKNESS - 10, box.height - WALL_THICKNESS - 10); // 상자 안쪽을 향함
             ctx.stroke();
 
-            // 온도 표시 (새로 추가)
+            // 온도 표시
             ctx.fillStyle = 'black';
-            ctx.font = '16px Inter, sans-serif'; // 버튼 글꼴 크기와 유사하게 설정
-            ctx.textAlign = 'right'; // 우측 정렬
-            ctx.textBaseline = 'top'; // 상단 기준
-            // 캔버스 우측 상단 (벽 안쪽)에 텍스트 그리기
+            ctx.font = '16px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
             ctx.fillText(`${temperature}도`, box.width - WALL_THICKNESS - 10, WALL_THICKNESS + 10);
         }
 
         function addParticles() {
             for (let i = 0; i < 50; i++) {
-                // 호스 끝(box.width - WALL_THICKNESS - 10, box.height - WALL_THICKNESS - 10)에서 입자 생성
                 particles.push(new Particle(box.width - WALL_THICKNESS - 10, box.height - WALL_THICKNESS - 10));
             }
             particleCount += 50;
@@ -217,15 +231,11 @@
 
         function increaseTemperature() {
             const oldSpeedMultiplier = calculateSpeedMultiplier();
-            
             temperature += 5;
-            // tempButton.textContent = `온도 (${temperature}도)`; // 텍스트 업데이트 제거 (캔버스에 그림)
-
             const newSpeedMultiplier = calculateSpeedMultiplier();
 
             if (oldSpeedMultiplier > 0) {
                 const scaleFactor = newSpeedMultiplier / oldSpeedMultiplier;
-                
                 particles.forEach(particle => {
                     particle.vx *= scaleFactor;
                     particle.vy *= scaleFactor;
@@ -233,23 +243,18 @@
             }
         }
 
-        // 온도 낮추기 함수 (새로 추가)
         function decreaseTemperature() {
-            // 0도 미만으로 내려가지 않도록 방지
             if (temperature <= 0) {
                 temperature = 0;
                 return;
             }
 
             const oldSpeedMultiplier = calculateSpeedMultiplier();
-            
             temperature -= 5;
-
             const newSpeedMultiplier = calculateSpeedMultiplier();
 
-            if (oldSpeedMultiplier > 0) { // 0으로 나누기 방지
+            if (oldSpeedMultiplier > 0) {
                 const scaleFactor = newSpeedMultiplier / oldSpeedMultiplier;
-                
                 particles.forEach(particle => {
                     particle.vx *= scaleFactor;
                     particle.vy *= scaleFactor;
@@ -259,7 +264,6 @@
 
         function resolveCollision(p1, p2, dx, dy, distance, minDistance) {
             const overlap = (minDistance - distance) / 2;
-            
             const nx = dx / distance;
             const ny = dy / distance;
 
@@ -284,44 +288,33 @@
         }
 
         function animate() {
-            ctx.clearRect(0, 0, box.width, box.height); // 전체 캔버스 지우기
-
-            drawStaticElements(); // 벽과 펌프/호스 그리기
-
-            // 모든 입자 위치 업데이트 (벽 충돌 처리)
+            ctx.clearRect(0, 0, box.width, box.height);
+            drawStaticElements();
             particles.forEach(particle => {
                 particle.update();
             });
-
-            // 입자 간 충돌 처리
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     const p1 = particles[i];
                     const p2 = particles[j];
-
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     const minDistance = p1.radius + p2.radius;
-
                     if (distance < minDistance) {
                         resolveCollision(p1, p2, dx, dy, distance, minDistance);
                     }
                 }
             }
-
-            // 모든 입자 그리기
             particles.forEach(particle => {
                 particle.draw();
             });
-
             requestAnimationFrame(animate);
         }
 
         addButton.addEventListener('click', addParticles);
-        // tempButton.addEventListener('click', increaseTemperature); // 기존 리스너 제거
-        tempUpButton.addEventListener('click', increaseTemperature); // Up 버튼 리스너
-        tempDownButton.addEventListener('click', decreaseTemperature); // Down 버튼 리스너
+        tempUpButton.addEventListener('click', increaseTemperature);
+        tempDownButton.addEventListener('click', decreaseTemperature);
 
         animate();
     </script>
