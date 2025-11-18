@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카드 조합 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 화면 캡쳐 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibjNQVbXlmbrrdzaRhTygDabRESOLJtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body { 
+            font-family: "Inter", sans-serif; 
+            background-color: #f3f4f6; /* 배경을 연한 회색으로 변경하여 중앙 80%가 돋보이게 함 */
+            color: #1f2937;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* 드래그 대상 카드 */
+        .draggable-card {
+            transition: all 0.2s ease-in-out;
+            cursor: grab;
+            width: 100%;
+            height: 100%;
+        }
+        .draggable-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .draggable-card:active {
+            cursor: grabbing;
+            transform: scale(1.01);
+        }
+        
+        /* 드롭 영역 스타일 */
+        .dropzone {
+            transition: all 0.2s ease-in-out;
+            border: 2px dashed #d1d5db; 
+            background-color: #f9fafb; 
+            width: 100%;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px; 
+            color: #6b7280; 
+            text-align: center;
+            font-size: 0.875rem; 
+            aspect-ratio: 5 / 7; 
+            overflow: hidden; 
+        }
+        
+        .dropzone-factor { background-color: #f3f4f6; }
+        .dropzone-factor.blue-bg { background-color: #dbeafe; }
+        .dropzone-factor.pink-bg { background-color: #fce7f3; }
+        .dropzone-relation { cursor: pointer; background-color: #ffffff; }
+        .dropzone-relation:hover:not(.drop-filled) {
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .drag-over {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            border-color: #6366f1 !important;
+        }
+        
+        .drop-filled {
+            border-style: solid;
+            border-color: transparent;
+            background-color: transparent !important;
+            padding: 0; 
+        }
+        .drop-filled > .dropzone-placeholder { display: none; }
+        .dropzone-relation.drop-filled { cursor: pointer; }
+
+        #card-source-panel { border-right: 2px dashed #e5e7eb; }
+        #card-source-panel.drag-over { background-color: rgba(243, 244, 246, 0.5); }
+
+        /* 모달 스타일 */
+        .modal {
+            position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.4); display: none;
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #ffffff; padding: 20px; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; width: 90%; position: relative;
+        }
+        .close-button {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold;
+            cursor: pointer; position: absolute; top: 10px; right: 20px;
+        }
+        .modal-card {
+            width: 100px; height: auto; cursor: pointer; transition: transform 0.2s;
+            border: 2px solid transparent; border-radius: 0.5rem; overflow: hidden;
+        }
+        .modal-card:hover { transform: scale(1.05); border-color: #818cf8; }
+        .modal-card.selected { border-color: #6366f1; box-shadow: 0 0 0 3px #6366f1; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- 중앙 80% 컨테이너 -->
+    <div class="w-[80%] mx-auto bg-white min-h-screen shadow-2xl grid grid-cols-12 border-x border-gray-200">
+        
+        <!-- 좌측 패널 (너비 3/12) -->
+        <aside id="card-source-panel"
+               class="col-span-3 bg-gray-50 p-4 sm:p-6" 
+               data-zone-type="return"
+               ondrop="drop(event)"
+               ondragover="allowDrop(event)"
+               ondragenter="dragEnter(event)"
+               ondragleave="dragLeave(event)">
+            
+            <h2 class="text-2xl font-bold text-indigo-600 mb-6 text-center">기체의 상태(변화요인)</h2>
+            <p class="text-center text-gray-500 text-sm mb-4 -mt-4">(카드를 여기로 드래그해서 되돌리기)</p>
+            
+            <!-- 카드 리스트 컨테이너 -->
+            <div id="card-list-container" class="grid grid-cols-2 gap-3">
+                <!-- 초기화 시 이 내부 HTML이 재생성됩니다 -->
+            </div>
+        </aside>
+
+        <!-- 우측 작업 공간 (너비 9/12) -->
+        <main id="main-content" class="col-span-9 bg-white p-6 sm:p-8">
+            
+            <div class="bg-white rounded-xl p-6 sm:p-8 w-full flex flex-col space-y-6">
+
+                <!-- 모둠 입력 -->
+                <div class="text-right font-bold text-xl text-gray-700">
+                    기체의 성질 - (
+                    <input type="text" class="w-16 text-center bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-indigo-600 font-bold" placeholder="  ">
+                    )모둠
+                </div>
+
+                <!-- 일정하게 유지해야하는 요인 -->
+                <section>
+                    <div class="flex justify-between items-center mb-4 max-w-2xl mx-auto">
+                        <h3 class="text-xl font-semibold text-indigo-600 text-center pl-4">일정하게 유지해야하는 요인</h3>
+                        <button id="add-const-slot-button" class="text-sm bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-3 rounded-lg transition-colors shadow-sm">
+                            (+) 추가하기
+                        </button>
+                    </div>
+                    
+                    <div id="constant-factors-grid" class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                        <!-- 슬롯 1 (하늘색, 고정) -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div id="zone-const-factor-1" class="dropzone dropzone-factor blue-bg"
+                                 data-zone-type="factor" data-zone-color="blue"
+                                 ondrop="drop(event)" ondragover="allowDrop(event)"
+                                 ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                 <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                            </div>
+                            <div id="zone-const-relation-1" class="dropzone dropzone-relation drop-filled">
+                                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg" alt="일정" class="w-full h-full object-contain pointer-events-none">
+                            </div>
+                        </div>
+                        
+                        <!-- 슬롯 2 (분홍색, 팝업) -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div id="zone-const-factor-2" class="dropzone dropzone-factor pink-bg"
+                                 data-zone-type="factor" data-zone-color="pink"
+                                 ondrop="drop(event)" ondragover="allowDrop(event)"
+                                 ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                 <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                            </div>
+                            <!-- 팝업으로 변경됨 -->
+                            <div id="zone-const-relation-2" class="dropzone dropzone-relation"
+                                 data-zone-type="relation"
+                                 onclick="openRelationModal(this)">
+                                 <span class="dropzone-placeholder text-gray-400">클릭</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-gray-300 my-2">
+
+                <!-- 상호작용 -->
+                <section class="flex-grow flex flex-col">
+                    <h3 class="text-xl font-semibold text-indigo-600 mb-4 text-center">상호작용</h3>
+                    
+                    <div class="flex-grow grid grid-cols-3 items-center gap-4">
+                        
+                        <div class="flex flex-col space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div id="zone-inter-factor-1" class="dropzone dropzone-factor blue-bg"
+                                     data-zone-type="factor" data-zone-color="blue"
+                                     ondrop="drop(event)" ondragover="allowDrop(event)"
+                                     ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                     <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                                </div>
+                                <div id="zone-inter-relation-1" class="dropzone dropzone-relation"
+                                     data-zone-type="relation" onclick="openRelationModal(this)">
+                                     <span class="dropzone-placeholder text-gray-400">클릭</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div id="zone-inter-factor-2" class="dropzone dropzone-factor pink-bg"
+                                     data-zone-type="factor" data-zone-color="pink"
+                                     ondrop="drop(event)" ondragover="allowDrop(event)"
+                                     ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                     <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                                </div>
+                                <div id="zone-inter-relation-2" class="dropzone dropzone-relation"
+                                     data-zone-type="relation" onclick="openRelationModal(this)">
+                                     <span class="dropzone-placeholder text-gray-400">클릭</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 화살표 -->
+                        <div class="flex flex-col items-center justify-center text-red-500 space-y-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                        </div>
+                        
+                        <div class="flex flex-col space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div id="zone-inter-factor-3" class="dropzone dropzone-factor blue-bg"
+                                     data-zone-type="factor" data-zone-color="blue"
+                                     ondrop="drop(event)" ondragover="allowDrop(event)"
+                                     ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                     <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                                </div>
+                                <div id="zone-inter-relation-3" class="dropzone dropzone-relation"
+                                     data-zone-type="relation" onclick="openRelationModal(this)">
+                                     <span class="dropzone-placeholder text-gray-400">클릭</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div id="zone-inter-factor-4" class="dropzone dropzone-factor pink-bg"
+                                     data-zone-type="factor" data-zone-color="pink"
+                                     ondrop="drop(event)" ondragover="allowDrop(event)"
+                                     ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                     <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                                </div>
+                                <div id="zone-inter-relation-4" class="dropzone dropzone-relation"
+                                     data-zone-type="relation" onclick="openRelationModal(this)">
+                                     <span class="dropzone-placeholder text-gray-400">클릭</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <footer class="text-center pt-4 border-t border-gray-200">
+                    <div class="flex justify-center space-x-6">
+                        <button id="reset-button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                            초기화
+                        </button>
+                        <button id="capture-button" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                            화면 캡쳐
+                        </button>
+                    </div>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <!-- 팝업 모달 -->
+    <div id="relationModal" class="modal">
+        <div class="modal-content border-2 border-indigo-100">
+            <span class="close-button">&times;</span>
+            <h3 class="text-xl font-bold text-indigo-600 mb-6 text-center">변화 선택</h3>
+            <div class="grid grid-cols-3 gap-4 justify-items-center max-w-sm mx-auto">
+                <div id="modal-card-up" class="modal-card" data-card-id="card-up">
+                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/up.jpg" alt="증가" class="w-full h-full object-contain">
+                    <p class="text-center text-sm font-bold mt-1 text-gray-600">증가</p>
+                </div>
+                <div id="modal-card-down" class="modal-card" data-card-id="card-down">
+                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/down.jpg" alt="감소" class="w-full h-full object-contain">
+                    <p class="text-center text-sm font-bold mt-1 text-gray-600">감소</p>
+                </div>
+                <div id="modal-card-const" class="modal-card" data-card-id="card-const">
+                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg" alt="일정" class="w-full h-full object-contain">
+                    <p class="text-center text-sm font-bold mt-1 text-gray-600">일정</p>
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="select-relation-button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                    선택 완료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // [복구] 왼쪽 패널의 초기 HTML 템플릿 (초기화 시 사용)
+        // w-[70%] 등 원래 스타일로 복구됨
+        const initialCardsHTML = `
+            <div id="card-vol" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/vol.jpg" alt="기체의 부피" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-dist" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/vol-1.jpg" alt="입자 사이의 거리" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-tem" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/tem.jpg" alt="기체의 온도" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-speed" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/tem-1.jpg" alt="입자의 속력" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-pre" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre.jpg" alt="기체의 압력" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-collide" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre-1.jpg" alt="입자의 충돌 횟수" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+            <div id="card-strength" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
+                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre-2.jpg" alt="입자의 충돌 세기" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
+            </div>
+        `;
+
+        // 페이지 로드 시 왼쪽 패널 생성
+        document.getElementById('card-list-container').innerHTML = initialCardsHTML;
+
+        const cardImageLinks = {
+            "card-up": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/up.jpg",
+            "card-down": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/down.jpg",
+            "card-const": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg",
+        };
+        const cardAltTexts = { "card-up": "증가", "card-down": "감소", "card-const": "일정" };
+
+        let currentTargetDropzone = null;
+        let selectedRelationCardId = null;
+        let constantSlotCounter = 2;
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) {
+            ev.dataTransfer.setData("text/plain", ev.target.id);
+            ev.dataTransfer.setData("card-color", ev.target.dataset.cardColor);
+        }
+        function dragEnter(ev) {
+            ev.preventDefault();
+            const zoneType = ev.currentTarget.dataset.zoneType;
+            if (zoneType === 'factor' || zoneType === 'return') ev.currentTarget.classList.add('drag-over');
+        }
+        function dragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const cardId = ev.dataTransfer.getData("text/plain");
+            const cardColor = ev.dataTransfer.getData("card-color");
+            const cardElement = document.getElementById(cardId);
+            if (!cardElement) return;
+
+            const dropZone = ev.currentTarget;
+            const originalParent = cardElement.parentElement; 
+            dropZone.classList.remove('drag-over');
+
+            const zoneType = dropZone.dataset.zoneType;
+            const zoneColor = dropZone.dataset.zoneColor;
+
+            // 왼쪽으로 되돌리기
+            if (zoneType === 'return') {
+                returnCardToSource(cardElement);
+                if (originalParent && originalParent.dataset.zoneType === 'factor') {
+                    restorePlaceholder(originalParent, "요인 카드");
+                }
+                return;
+            }
+
+            // 오른쪽 슬롯에 드롭
+            if (zoneType === 'factor') {
+                if (cardColor !== zoneColor) {
+                    console.warn("Color mismatch");
+                    return;
+                }
+                const existingCard = dropZone.querySelector('.draggable-card');
+                if (existingCard) returnCardToSource(existingCard);
+                
+                dropZone.innerHTML = '';
+                dropZone.appendChild(cardElement);
+                dropZone.classList.add('drop-filled');
+                
+                // 카드 꽉 채우기 스타일 적용
+                const img = cardElement.querySelector('img');
+                if (img) {
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    img.style.margin = '0';
+                }
+                
+                if (originalParent && originalParent.dataset.zoneType === 'factor' && originalParent.id !== dropZone.id) {
+                     restorePlaceholder(originalParent, "요인 카드");
+                }
+            }
+        }
+        
+        // 개별 카드를 왼쪽으로 되돌리는 함수
+        function returnCardToSource(cardElement) {
+            if (!cardElement) return;
+            const img = cardElement.querySelector('img');
+            if (img) {
+                img.style.width = ''; img.style.height = ''; img.style.objectFit = ''; img.style.margin = '';
+            }
+            document.getElementById('card-list-container').appendChild(cardElement);
+        }
+        
+        function restorePlaceholder(dropZone, text) {
+            if (!dropZone) return;
+            dropZone.innerHTML = `<span class="dropzone-placeholder font-semibold ${dropZone.dataset.zoneColor === 'blue' ? 'text-blue-800' : 'text-pink-800'}">${text}</span>`;
+            dropZone.classList.remove('drop-filled');
+        }
+
+        const relationModal = document.getElementById("relationModal");
+        const closeButton = document.querySelector(".close-button");
+        const selectRelationButton = document.getElementById("select-relation-button");
+        const modalCards = document.querySelectorAll(".modal-card");
+
+        function openRelationModal(dropZone) {
+            if (dropZone.classList.contains('drop-filled')) {
+                restorePlaceholderRel(dropZone);
+                return;
+            }
+            currentTargetDropzone = dropZone;
+            relationModal.style.display = "flex";
+            modalCards.forEach(card => card.classList.remove('selected'));
+            selectedRelationCardId = null;
+        }
+        
+        function restorePlaceholderRel(dropZone) {
+             dropZone.innerHTML = `<span class="dropzone-placeholder text-gray-400">클릭</span>`;
+             dropZone.classList.remove('drop-filled');
+        }
+
+        closeButton.onclick = function() { relationModal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == relationModal) relationModal.style.display = "none"; }
+
+        modalCards.forEach(card => {
+            card.addEventListener('click', function() {
+                modalCards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedRelationCardId = this.dataset.cardId;
+            });
+        });
+
+        selectRelationButton.onclick = function() {
+            if (selectedRelationCardId && currentTargetDropzone) {
+                const cardImgSrc = cardImageLinks[selectedRelationCardId];
+                const cardAltText = cardAltTexts[selectedRelationCardId];
+                currentTargetDropzone.innerHTML = `<img src="${cardImgSrc}" alt="${cardAltText}" class="w-full h-full object-contain pointer-events-none">`;
+                currentTargetDropzone.classList.add('drop-filled');
+                relationModal.style.display = "none";
+                currentTargetDropzone = null;
+                selectedRelationCardId = null;
+            } else {
+                alert("카드를 선택해주세요!");
+            }
+        }
+
+        function addConstantFactorSlot() {
+            constantSlotCounter++;
+            const newSlotHTML = `
+                <div class="grid grid-cols-2 gap-2 dynamic-slot">
+                    <div id="zone-const-factor-${constantSlotCounter}" class="dropzone dropzone-factor pink-bg"
+                         data-zone-type="factor" data-zone-color="pink">
+                         <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                    </div>
+                    <div id="zone-const-relation-${constantSlotCounter}" class="dropzone dropzone-relation"
+                         data-zone-type="relation" onclick="openRelationModal(this)">
+                         <span class="dropzone-placeholder text-gray-400">클릭</span>
+                    </div>
+                </div>
+            `;
+            const grid = document.getElementById('constant-factors-grid');
+            grid.insertAdjacentHTML('beforeend', newSlotHTML);
+            const newFactorZone = document.getElementById(`zone-const-factor-${constantSlotCounter}`);
+            newFactorZone.ondrop = drop;
+            newFactorZone.ondragover = allowDrop;
+            newFactorZone.ondragenter = dragEnter;
+            newFactorZone.ondragleave = dragLeave;
+        }
+        document.getElementById('add-const-slot-button').addEventListener('click', addConstantFactorSlot);
+
+        // 초기화 버튼 (완전 복구: 왼쪽 패널 재생성)
+        document.getElementById('reset-button').addEventListener('click', function() {
+            // 1. 요인 드롭존 리셋
+            document.querySelectorAll('.dropzone-factor').forEach(zone => {
+                restorePlaceholder(zone, "요인 카드");
+            });
+            // 2. 상호작용 관계 드롭존 리셋
+            document.querySelectorAll('[id^="zone-inter-relation"]').forEach(zone => {
+                restorePlaceholderRel(zone);
+            });
+            // 3. 일정 요인 2번째(팝업) 리셋
+            const constRelationDropzone = document.getElementById('zone-const-relation-2');
+            if (constRelationDropzone) restorePlaceholderRel(constRelationDropzone);
+
+            // 4. 동적 슬롯 삭제
+            document.querySelectorAll('.dynamic-slot').forEach(slot => slot.remove());
+            constantSlotCounter = 2;
+            
+            // 5. 왼쪽 패널 완전 재생성 (초기화)
+            document.getElementById('card-list-container').innerHTML = initialCardsHTML;
+        });
+
+        document.getElementById('capture-button').addEventListener('click', function() {
+            const captureElement = document.getElementById('main-content');
+            const footerButtons = document.querySelector('footer');
+            if (footerButtons) footerButtons.style.display = 'none';
+            html2canvas(captureElement, {
+                useCORS: true, backgroundColor: '#ffffff', scale: 2
+            }).then(canvas => {
+                const imageURL = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageURL;
+                downloadLink.download = 'card-combination.png';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                if (footerButtons) footerButtons.style.display = 'block';
+            }).catch(err => {
+                console.error("캡쳐 오류:", err);
+                if (footerButtons) footerButtons.style.display = 'block';
+                alert("캡쳐 실패.");
+            });
+        });
+    </script>
+
+</body>
+</html>
