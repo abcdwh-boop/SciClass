@@ -10,7 +10,7 @@
     <style>
         body { 
             font-family: "Inter", sans-serif; 
-            background-color: #ffffff; 
+            background-color: #f3f4f6; /* 배경색 추가 (중앙 80% 돋보이게) */
             color: #1f2937;
         }
         ::-webkit-scrollbar { width: 8px; }
@@ -100,13 +100,14 @@
         .modal-card.selected { border-color: #6366f1; box-shadow: 0 0 0 3px #6366f1; }
     </style>
 </head>
-<body class="bg-white text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
-    <div class="grid grid-cols-1 md:grid-cols-3 min-h-screen">
+    <!-- 중앙 80% 컨테이너 -->
+    <div class="w-[80%] mx-auto bg-white min-h-screen shadow-2xl grid grid-cols-12 border-x border-gray-200">
         
-        <!-- 좌측 패널 (너비 1/3) -->
+        <!-- 좌측 패널 (너비 3/12) -->
         <aside id="card-source-panel"
-               class="md:col-span-1 bg-gray-50 p-4 sm:p-6" 
+               class="col-span-3 bg-gray-50 p-4 sm:p-6" 
                data-zone-type="return"
                ondrop="drop(event)"
                ondragover="allowDrop(event)"
@@ -122,10 +123,10 @@
             </div>
         </aside>
 
-        <!-- 우측 작업 공간 (너비 2/3) -->
-        <main id="main-content" class="md:col-span-2 bg-white p-6 sm:p-8">
+        <!-- 우측 작업 공간 (너비 9/12) -->
+        <main id="main-content" class="col-span-9 bg-white p-6 sm:p-8">
             
-            <div class="bg-gray-100 rounded-xl shadow-lg p-6 sm:p-8 w-full flex flex-col space-y-6 border border-gray-200">
+            <div class="bg-white rounded-xl p-6 sm:p-8 w-full flex flex-col space-y-6">
 
                 <!-- 모둠 입력 -->
                 <div class="text-right font-bold text-xl text-gray-700">
