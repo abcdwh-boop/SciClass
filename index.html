@@ -10,7 +10,7 @@
     <style>
         body { 
             font-family: "Inter", sans-serif; 
-            background-color: #f3f4f6; /* 배경을 연한 회색으로 변경하여 중앙 80%가 돋보이게 함 */
+            background-color: #ffffff; 
             color: #1f2937;
         }
         ::-webkit-scrollbar { width: 8px; }
@@ -100,14 +100,13 @@
         .modal-card.selected { border-color: #6366f1; box-shadow: 0 0 0 3px #6366f1; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-white text-gray-800">
 
-    <!-- 중앙 80% 컨테이너 -->
-    <div class="w-[80%] mx-auto bg-white min-h-screen shadow-2xl grid grid-cols-12 border-x border-gray-200">
+    <div class="grid grid-cols-1 md:grid-cols-3 min-h-screen">
         
-        <!-- 좌측 패널 (너비 3/12) -->
+        <!-- 좌측 패널 (너비 1/3) -->
         <aside id="card-source-panel"
-               class="col-span-3 bg-gray-50 p-4 sm:p-6" 
+               class="md:col-span-1 bg-gray-50 p-4 sm:p-6" 
                data-zone-type="return"
                ondrop="drop(event)"
                ondragover="allowDrop(event)"
@@ -123,10 +122,10 @@
             </div>
         </aside>
 
-        <!-- 우측 작업 공간 (너비 9/12) -->
-        <main id="main-content" class="col-span-9 bg-white p-6 sm:p-8">
+        <!-- 우측 작업 공간 (너비 2/3) -->
+        <main id="main-content" class="md:col-span-2 bg-white p-6 sm:p-8">
             
-            <div class="bg-white rounded-xl p-6 sm:p-8 w-full flex flex-col space-y-6">
+            <div class="bg-gray-100 rounded-xl shadow-lg p-6 sm:p-8 w-full flex flex-col space-y-6 border border-gray-200">
 
                 <!-- 모둠 입력 -->
                 <div class="text-right font-bold text-xl text-gray-700">
@@ -246,15 +245,19 @@
                     </div>
                 </section>
                 
-                <footer class="text-center pt-4 border-t border-gray-200">
-                    <div class="flex justify-center space-x-6">
-                        <button id="reset-button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                <footer class="text-center mt-4">
+                    <div class="flex justify-center space-x-4 mb-3">
+                        <button id="reset-button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors">
                             초기화
                         </button>
-                        <button id="capture-button" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                        <button id="capture-button" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
                             화면 캡쳐
                         </button>
                     </div>
+                    <!-- 패들렛 이동 버튼 -->
+                    <a href="https://padlet.com/gireumt01/padlet-m3quc3u08k7367gu" target="_blank" class="inline-block px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors">
+                        [패들렛으로 이동]
+                    </a>
                 </footer>
             </div>
         </main>
