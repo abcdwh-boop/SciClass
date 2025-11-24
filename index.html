@@ -2,38 +2,54 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>카드 조합 페이지</title>
+    <!-- 뷰포트 고정 (1280px) -->
+    <meta name="viewport" content="width=1280">
+    <title>카드 조합 페이지 (Version 2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 화면 캡쳐 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibjNQVbXlmbrrdzaRhTygDabRESOLJtw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body { 
             font-family: "Inter", sans-serif; 
-            background-color: #f3f4f6; /* 배경색 추가 (중앙 80% 돋보이게) */
+            background-color: #f3f4f6; 
             color: #1f2937;
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #e5e7eb; }
-        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
-        /* 드래그 대상 카드 */
-        .draggable-card {
-            transition: all 0.2s ease-in-out;
-            cursor: grab;
-            width: 100%;
-            height: 100%;
-        }
-        .draggable-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .draggable-card:active {
-            cursor: grabbing;
-            transform: scale(1.01);
+            margin: 0; padding: 0;
+            min-width: 1280px; /* 레이아웃 깨짐 방지 */
+            overflow-x: auto;
         }
         
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* 카드 공통 스타일 */
+        .card-block {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            user-select: none; /* 텍스트 드래그 방지 */
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 0.25rem;
+        }
+        
+        /* 드래그 대상 스타일 */
+        .draggable-card { 
+            cursor: grab; 
+            width: 100%; height: 100%;
+        }
+        .draggable-card:hover .card-block {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        .draggable-card:active { cursor: grabbing; }
+        .draggable-card:active .card-block { transform: scale(1.02); }
+
         /* 드롭 영역 스타일 */
         .dropzone {
             transition: all 0.2s ease-in-out;
@@ -41,20 +57,17 @@
             background-color: #f9fafb; 
             width: 100%;
             border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             padding: 4px; 
-            color: #6b7280; 
-            text-align: center;
-            font-size: 0.875rem; 
             aspect-ratio: 5 / 7; 
             overflow: hidden; 
+            position: relative;
         }
         
-        .dropzone-factor { background-color: #f3f4f6; }
-        .dropzone-factor.blue-bg { background-color: #dbeafe; }
-        .dropzone-factor.pink-bg { background-color: #fce7f3; }
+        /* 드롭존 색상 테마 */
+        .dropzone-factor.blue-bg { background-color: #e0f2fe; /* sky-100 */ }
+        .dropzone-factor.pink-bg { background-color: #fce7f3; /* pink-100 */ }
+        
         .dropzone-relation { cursor: pointer; background-color: #ffffff; }
         .dropzone-relation:hover:not(.drop-filled) {
             transform: scale(1.02);
@@ -67,16 +80,12 @@
         }
         
         .drop-filled {
-            border-style: solid;
-            border-color: transparent;
-            background-color: transparent !important;
-            padding: 0; 
+            border-style: solid; border-color: transparent;
+            background-color: transparent !important; padding: 0; 
         }
         .drop-filled > .dropzone-placeholder { display: none; }
-        .dropzone-relation.drop-filled { cursor: pointer; }
-
+        
         #card-source-panel { border-right: 2px dashed #e5e7eb; }
-        #card-source-panel.drag-over { background-color: rgba(243, 244, 246, 0.5); }
 
         /* 모달 스타일 */
         .modal {
@@ -85,27 +94,28 @@
             align-items: center; justify-content: center;
         }
         .modal-content {
-            background-color: #ffffff; padding: 20px; border-radius: 8px;
+            background-color: #ffffff; padding: 30px; border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; width: 90%; position: relative;
         }
         .close-button {
             color: #aaa; float: right; font-size: 28px; font-weight: bold;
-            cursor: pointer; position: absolute; top: 10px; right: 20px;
+            cursor: pointer; position: absolute; top: 15px; right: 20px;
         }
-        .modal-card {
-            width: 100px; height: auto; cursor: pointer; transition: transform 0.2s;
-            border: 2px solid transparent; border-radius: 0.5rem; overflow: hidden;
+        /* 모달 내 카드 선택 스타일 */
+        .modal-card-wrapper {
+            cursor: pointer; transition: transform 0.2s;
+            border: 2px solid transparent; border-radius: 0.5rem; padding: 4px;
         }
-        .modal-card:hover { transform: scale(1.05); border-color: #818cf8; }
-        .modal-card.selected { border-color: #6366f1; box-shadow: 0 0 0 3px #6366f1; }
+        .modal-card-wrapper:hover { transform: scale(1.05); }
+        .modal-card-wrapper.selected { border-color: #6366f1; box-shadow: 0 0 0 3px #6366f1; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- 중앙 80% 컨테이너 -->
-    <div class="w-[80%] mx-auto bg-white min-h-screen shadow-2xl grid grid-cols-12 border-x border-gray-200">
+    <!-- 중앙 1280px 고정 컨테이너 -->
+    <div id="layout-wrapper" class="w-[1280px] mx-auto bg-white min-h-screen shadow-2xl grid grid-cols-12 border-x border-gray-200">
         
-        <!-- 좌측 패널 (너비 3/12) -->
+        <!-- 좌측 패널 (3/12) -->
         <aside id="card-source-panel"
                class="col-span-3 bg-gray-50 p-4 sm:p-6" 
                data-zone-type="return"
@@ -119,14 +129,14 @@
             
             <!-- 카드 리스트 컨테이너 -->
             <div id="card-list-container" class="grid grid-cols-2 gap-3">
-                <!-- 초기화 시 이 내부 HTML이 재생성됩니다 -->
+                <!-- 자바스크립트에서 초기화 시 여기에 카드가 생성됩니다 -->
             </div>
         </aside>
 
-        <!-- 우측 작업 공간 (너비 9/12) -->
+        <!-- 우측 작업 공간 (9/12) -->
         <main id="main-content" class="col-span-9 bg-white p-6 sm:p-8">
             
-            <div class="bg-white rounded-xl p-6 sm:p-8 w-full flex flex-col space-y-6">
+            <div class="bg-white rounded-xl p-6 sm:p-8 w-full flex flex-col space-y-6 border border-gray-100 shadow-sm">
 
                 <!-- 모둠 입력 -->
                 <div class="text-right font-bold text-xl text-gray-700">
@@ -151,10 +161,13 @@
                                  data-zone-type="factor" data-zone-color="blue"
                                  ondrop="drop(event)" ondragover="allowDrop(event)"
                                  ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                 <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                                 <span class="dropzone-placeholder font-semibold text-blue-800 opacity-50">요인 카드</span>
                             </div>
-                            <div id="zone-const-relation-1" class="dropzone dropzone-relation drop-filled">
-                                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg" alt="일정" class="w-full h-full object-contain pointer-events-none">
+                            <div id="zone-const-relation-1" class="dropzone dropzone-relation drop-filled cursor-default">
+                                <!-- 고정된 일정 카드 (연보라색) -->
+                                <div class="card-block bg-purple-200">
+                                    <span class="text-3xl font-extrabold text-black">일정</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -164,7 +177,7 @@
                                  data-zone-type="factor" data-zone-color="pink"
                                  ondrop="drop(event)" ondragover="allowDrop(event)"
                                  ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                 <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                                 <span class="dropzone-placeholder font-semibold text-pink-800 opacity-50">요인 카드</span>
                             </div>
                             <!-- 팝업으로 변경됨 -->
                             <div id="zone-const-relation-2" class="dropzone dropzone-relation"
@@ -176,7 +189,7 @@
                     </div>
                 </section>
 
-                <hr class="border-gray-300 my-2">
+                <hr class="border-gray-200 my-2">
 
                 <!-- 상호작용 -->
                 <section class="flex-grow flex flex-col">
@@ -190,7 +203,7 @@
                                      data-zone-type="factor" data-zone-color="blue"
                                      ondrop="drop(event)" ondragover="allowDrop(event)"
                                      ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                     <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                                     <span class="dropzone-placeholder font-semibold text-blue-800 opacity-50">요인 카드</span>
                                 </div>
                                 <div id="zone-inter-relation-1" class="dropzone dropzone-relation"
                                      data-zone-type="relation" onclick="openRelationModal(this)">
@@ -202,7 +215,7 @@
                                      data-zone-type="factor" data-zone-color="pink"
                                      ondrop="drop(event)" ondragover="allowDrop(event)"
                                      ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                     <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                                     <span class="dropzone-placeholder font-semibold text-pink-800 opacity-50">요인 카드</span>
                                 </div>
                                 <div id="zone-inter-relation-2" class="dropzone dropzone-relation"
                                      data-zone-type="relation" onclick="openRelationModal(this)">
@@ -223,7 +236,7 @@
                                      data-zone-type="factor" data-zone-color="blue"
                                      ondrop="drop(event)" ondragover="allowDrop(event)"
                                      ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                     <span class="dropzone-placeholder font-semibold text-blue-800">요인 카드</span>
+                                     <span class="dropzone-placeholder font-semibold text-blue-800 opacity-50">요인 카드</span>
                                 </div>
                                 <div id="zone-inter-relation-3" class="dropzone dropzone-relation"
                                      data-zone-type="relation" onclick="openRelationModal(this)">
@@ -235,7 +248,7 @@
                                      data-zone-type="factor" data-zone-color="pink"
                                      ondrop="drop(event)" ondragover="allowDrop(event)"
                                      ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                                     <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                                     <span class="dropzone-placeholder font-semibold text-pink-800 opacity-50">요인 카드</span>
                                 </div>
                                 <div id="zone-inter-relation-4" class="dropzone dropzone-relation"
                                      data-zone-type="relation" onclick="openRelationModal(this)">
@@ -270,18 +283,28 @@
             <span class="close-button">&times;</span>
             <h3 class="text-xl font-bold text-indigo-600 mb-6 text-center">변화 선택</h3>
             <div class="grid grid-cols-3 gap-4 justify-items-center max-w-sm mx-auto">
-                <div id="modal-card-up" class="modal-card" data-card-id="card-up">
-                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/up.jpg" alt="증가" class="w-full h-full object-contain">
-                    <p class="text-center text-sm font-bold mt-1 text-gray-600">증가</p>
+                
+                <!-- 증가 (연녹색) -->
+                <div class="modal-card-wrapper" data-card-id="card-up">
+                    <div class="card-block bg-green-200 w-[100px] h-[140px]">
+                        <span class="text-3xl font-extrabold text-black">증가</span>
+                    </div>
                 </div>
-                <div id="modal-card-down" class="modal-card" data-card-id="card-down">
-                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/down.jpg" alt="감소" class="w-full h-full object-contain">
-                    <p class="text-center text-sm font-bold mt-1 text-gray-600">감소</p>
+                
+                <!-- 감소 (연노랑색) -->
+                <div class="modal-card-wrapper" data-card-id="card-down">
+                    <div class="card-block bg-yellow-200 w-[100px] h-[140px]">
+                        <span class="text-3xl font-extrabold text-black">감소</span>
+                    </div>
                 </div>
-                <div id="modal-card-const" class="modal-card" data-card-id="card-const">
-                    <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg" alt="일정" class="w-full h-full object-contain">
-                    <p class="text-center text-sm font-bold mt-1 text-gray-600">일정</p>
+                
+                <!-- 일정 (연보라색) -->
+                <div class="modal-card-wrapper" data-card-id="card-const">
+                    <div class="card-block bg-purple-200 w-[100px] h-[140px]">
+                        <span class="text-3xl font-extrabold text-black">일정</span>
+                    </div>
                 </div>
+                
             </div>
             <div class="text-center mt-6">
                 <button id="select-relation-button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
@@ -292,41 +315,72 @@
     </div>
 
     <script>
-        // [복구] 왼쪽 패널의 초기 HTML 템플릿 (초기화 시 사용)
-        // w-[70%] 등 원래 스타일로 복구됨
-        const initialCardsHTML = `
-            <div id="card-vol" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/vol.jpg" alt="기체의 부피" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-dist" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/vol-1.jpg" alt="입자 사이의 거리" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-tem" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/tem.jpg" alt="기체의 온도" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-speed" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/tem-1.jpg" alt="입자의 속력" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-pre" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="blue">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre.jpg" alt="기체의 압력" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-collide" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre-1.jpg" alt="입자의 충돌 횟수" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-            <div id="card-strength" class="draggable-card" draggable="true" ondragstart="drag(event)" data-card-group="factor" data-card-color="pink">
-                <img src="https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/pre-2.jpg" alt="입자의 충돌 세기" class="w-[70%] h-auto object-cover pointer-events-none mx-auto">
-            </div>
-        `;
+        // 카드 템플릿 생성 함수 (텍스트 블록)
+        function createCardHTML(titleSmall, titleLarge, colorClass) {
+            return `
+                <div class="card-block ${colorClass}">
+                    <span class="text-xs sm:text-sm font-bold text-gray-600 mb-1">${titleSmall}</span>
+                    <span class="text-2xl sm:text-3xl font-extrabold text-black leading-tight text-center">${titleLarge}</span>
+                </div>
+            `;
+        }
 
-        // 페이지 로드 시 왼쪽 패널 생성
-        document.getElementById('card-list-container').innerHTML = initialCardsHTML;
+        // 관계 카드 템플릿 (모달 선택 시 사용)
+        function createRelationCardHTML(text, colorClass) {
+            return `
+                <div class="card-block ${colorClass} w-full h-full">
+                    <span class="text-3xl font-extrabold text-black">${text}</span>
+                </div>
+            `;
+        }
 
-        const cardImageLinks = {
-            "card-up": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/up.jpg",
-            "card-down": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/down.jpg",
-            "card-const": "https://raw.githubusercontent.com/abcdwh-boop/SciClass/refs/heads/main/const.jpg",
+        // 왼쪽 패널 카드 데이터 (텍스트)
+        const factorCardsData = [
+            { id: "card-vol", small: "기체의", large: "부피", color: "bg-sky-100", group: "blue" },
+            { id: "card-dist", small: "입자 사이의", large: "거리", color: "bg-pink-100", group: "pink" },
+            { id: "card-tem", small: "기체의", large: "온도", color: "bg-sky-100", group: "blue" },
+            { id: "card-speed", small: "입자의", large: "속력", color: "bg-pink-100", group: "pink" },
+            { id: "card-pre", small: "기체의", large: "압력", color: "bg-sky-100", group: "blue" },
+            { id: "card-collide", small: "입자의", large: "충돌<br><span class='text-blue-900'>횟수</span>", color: "bg-pink-100", group: "pink" },
+            { id: "card-strength", small: "입자의", large: "충돌<br><span class='text-blue-900'>세기</span>", color: "bg-pink-100", group: "pink" }
+        ];
+
+        // 관계 카드 데이터 (HTML 맵핑)
+        const relationCardsHTML = {
+            "card-up": createRelationCardHTML("증가", "bg-green-200"),
+            "card-down": createRelationCardHTML("감소", "bg-yellow-200"),
+            "card-const": createRelationCardHTML("일정", "bg-purple-200")
         };
-        const cardAltTexts = { "card-up": "증가", "card-down": "감소", "card-const": "일정" };
+
+        // 왼쪽 패널 초기화 함수
+        function initLeftPanel() {
+            const container = document.getElementById('card-list-container');
+            container.innerHTML = '';
+            
+            factorCardsData.forEach(card => {
+                // 래퍼 생성: max-w-[105px]로 우측 드롭존과 크기 일치시킴
+                const wrapper = document.createElement('div');
+                wrapper.className = "w-full max-w-[105px] aspect-[5/7] flex justify-center items-center bg-white rounded-lg shadow-sm border border-gray-100 p-1 mx-auto";
+                
+                // 드래그 가능한 카드 생성
+                const dragDiv = document.createElement('div');
+                dragDiv.id = card.id;
+                dragDiv.className = "draggable-card";
+                dragDiv.draggable = true;
+                dragDiv.dataset.cardGroup = "factor";
+                dragDiv.dataset.cardColor = card.group;
+                dragDiv.ondragstart = drag;
+                
+                // 내부 디자인 HTML 삽입
+                dragDiv.innerHTML = createCardHTML(card.small, card.large, card.color);
+                
+                wrapper.appendChild(dragDiv);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // 페이지 로드 시 초기화
+        initLeftPanel();
 
         let currentTargetDropzone = null;
         let selectedRelationCardId = null;
@@ -358,7 +412,7 @@
             const zoneType = dropZone.dataset.zoneType;
             const zoneColor = dropZone.dataset.zoneColor;
 
-            // 왼쪽으로 되돌리기
+            // 왼쪽 패널로 되돌리기
             if (zoneType === 'return') {
                 returnCardToSource(cardElement);
                 if (originalParent && originalParent.dataset.zoneType === 'factor') {
@@ -371,52 +425,64 @@
             if (zoneType === 'factor') {
                 if (cardColor !== zoneColor) {
                     console.warn("Color mismatch");
-                    return;
+                    return; // 색상 불일치 시 거부
                 }
+                
+                // 이미 카드가 있다면 되돌리기
                 const existingCard = dropZone.querySelector('.draggable-card');
                 if (existingCard) returnCardToSource(existingCard);
                 
-                dropZone.innerHTML = '';
-                dropZone.appendChild(cardElement);
+                dropZone.innerHTML = ''; // 플레이스홀더 제거
+                dropZone.appendChild(cardElement); // DOM 이동
                 dropZone.classList.add('drop-filled');
                 
-                // 카드 꽉 채우기 스타일 적용
-                const img = cardElement.querySelector('img');
-                if (img) {
-                    img.style.width = '100%';
-                    img.style.height = '100%';
-                    img.style.objectFit = 'contain';
-                    img.style.margin = '0';
-                }
-                
+                // 원래 있던 곳이 팩터 드롭존이면 복원
                 if (originalParent && originalParent.dataset.zoneType === 'factor' && originalParent.id !== dropZone.id) {
                      restorePlaceholder(originalParent, "요인 카드");
                 }
             }
         }
         
-        // 개별 카드를 왼쪽으로 되돌리는 함수
+        // 카드를 왼쪽 패널의 빈 래퍼로 되돌리기
         function returnCardToSource(cardElement) {
             if (!cardElement) return;
-            const img = cardElement.querySelector('img');
-            if (img) {
-                img.style.width = ''; img.style.height = ''; img.style.objectFit = ''; img.style.margin = '';
+            
+            const container = document.getElementById('card-list-container');
+            const wrappers = container.querySelectorAll(':scope > div');
+            let targetWrapper = null;
+            
+            // 비어있는 래퍼 찾기
+            for (let wrapper of wrappers) {
+                if (wrapper.childElementCount === 0) {
+                    targetWrapper = wrapper;
+                    break;
+                }
             }
-            document.getElementById('card-list-container').appendChild(cardElement);
+            
+            // 비어있는 곳이 없으면 생성 (예외 처리)
+            if (!targetWrapper) {
+                targetWrapper = document.createElement('div');
+                targetWrapper.className = "w-full max-w-[105px] aspect-[5/7] flex justify-center items-center bg-white rounded-lg shadow-sm border border-gray-100 p-1 mx-auto";
+                container.appendChild(targetWrapper);
+            }
+            
+            targetWrapper.appendChild(cardElement);
         }
         
         function restorePlaceholder(dropZone, text) {
             if (!dropZone) return;
-            dropZone.innerHTML = `<span class="dropzone-placeholder font-semibold ${dropZone.dataset.zoneColor === 'blue' ? 'text-blue-800' : 'text-pink-800'}">${text}</span>`;
+            dropZone.innerHTML = `<span class="dropzone-placeholder font-semibold ${dropZone.dataset.zoneColor === 'blue' ? 'text-blue-800' : 'text-pink-800'} opacity-50">${text}</span>`;
             dropZone.classList.remove('drop-filled');
         }
 
+        // 모달 관련 로직
         const relationModal = document.getElementById("relationModal");
         const closeButton = document.querySelector(".close-button");
         const selectRelationButton = document.getElementById("select-relation-button");
-        const modalCards = document.querySelectorAll(".modal-card");
+        const modalCards = document.querySelectorAll(".modal-card-wrapper");
 
         function openRelationModal(dropZone) {
+            // 이미 카드가 있으면 클릭 시 제거 (토글)
             if (dropZone.classList.contains('drop-filled')) {
                 restorePlaceholderRel(dropZone);
                 return;
@@ -445,9 +511,8 @@
 
         selectRelationButton.onclick = function() {
             if (selectedRelationCardId && currentTargetDropzone) {
-                const cardImgSrc = cardImageLinks[selectedRelationCardId];
-                const cardAltText = cardAltTexts[selectedRelationCardId];
-                currentTargetDropzone.innerHTML = `<img src="${cardImgSrc}" alt="${cardAltText}" class="w-full h-full object-contain pointer-events-none">`;
+                // HTML 블록 삽입
+                currentTargetDropzone.innerHTML = relationCardsHTML[selectedRelationCardId];
                 currentTargetDropzone.classList.add('drop-filled');
                 relationModal.style.display = "none";
                 currentTargetDropzone = null;
@@ -457,13 +522,14 @@
             }
         }
 
+        // (+) 추가 버튼
         function addConstantFactorSlot() {
             constantSlotCounter++;
             const newSlotHTML = `
                 <div class="grid grid-cols-2 gap-2 dynamic-slot">
                     <div id="zone-const-factor-${constantSlotCounter}" class="dropzone dropzone-factor pink-bg"
                          data-zone-type="factor" data-zone-color="pink">
-                         <span class="dropzone-placeholder font-semibold text-pink-800">요인 카드</span>
+                         <span class="dropzone-placeholder font-semibold text-pink-800 opacity-50">요인 카드</span>
                     </div>
                     <div id="zone-const-relation-${constantSlotCounter}" class="dropzone dropzone-relation"
                          data-zone-type="relation" onclick="openRelationModal(this)">
@@ -481,28 +547,27 @@
         }
         document.getElementById('add-const-slot-button').addEventListener('click', addConstantFactorSlot);
 
-        // 초기화 버튼 (완전 복구: 왼쪽 패널 재생성)
+        // 초기화 버튼
         document.getElementById('reset-button').addEventListener('click', function() {
-            // 1. 요인 드롭존 리셋
+            // 1. 드롭존 리셋
             document.querySelectorAll('.dropzone-factor').forEach(zone => {
                 restorePlaceholder(zone, "요인 카드");
             });
-            // 2. 상호작용 관계 드롭존 리셋
             document.querySelectorAll('[id^="zone-inter-relation"]').forEach(zone => {
                 restorePlaceholderRel(zone);
             });
-            // 3. 일정 요인 2번째(팝업) 리셋
             const constRelationDropzone = document.getElementById('zone-const-relation-2');
             if (constRelationDropzone) restorePlaceholderRel(constRelationDropzone);
 
-            // 4. 동적 슬롯 삭제
+            // 2. 동적 슬롯 삭제
             document.querySelectorAll('.dynamic-slot').forEach(slot => slot.remove());
             constantSlotCounter = 2;
             
-            // 5. 왼쪽 패널 완전 재생성 (초기화)
-            document.getElementById('card-list-container').innerHTML = initialCardsHTML;
+            // 3. 왼쪽 패널 재생성 (가장 깔끔한 초기화)
+            initLeftPanel();
         });
 
+        // 캡쳐 버튼
         document.getElementById('capture-button').addEventListener('click', function() {
             const captureElement = document.getElementById('main-content');
             const footerButtons = document.querySelector('footer');
