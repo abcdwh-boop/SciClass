@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Canvas로 수업도구 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; scroll-behavior: smooth; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+    </style>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-16 px-6 text-center shadow-lg">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Gemini Canvas로 수업도구 만들기</h1>
+        <p class="text-xl opacity-90">교사를 위한 인공지능 협업 및 도구 제작 가이드</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-12">
+        
+        <!-- Section 1: Introduction -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-info-circle text-3xl text-indigo-600 mr-3"></i>
+                <h2 class="text-3xl font-bold">1. Gemini Canvas란?</h2>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                <p class="leading-relaxed text-lg mb-4">
+                    Gemini Canvas(제미나이 캔버스)는 단순히 채팅을 주고받는 단계를 넘어, <strong>실시간으로 문서나 코드를 편집하고 미리보기를 제공하는 협업 환경</strong>입니다. 
+                </p>
+                <ul class="space-y-3 text-gray-600">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 대화형 인터페이스와 문서 편집기가 결합된 하이브리드 작업 공간</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 프로그래밍 지식 없이도 웹 앱, 퀴즈 도구, 시뮬레이션 제작 가능</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> 실시간 피드백 및 부분 수정 기능을 통한 수업 자료 최적화</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Visual Workflow with Mermaid -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-project-diagram text-3xl text-blue-600 mr-3"></i>
+                <h2 class="text-3xl font-bold">도구 제작 프로세스</h2>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-center">
+                <div class="mermaid w-full">
+                    graph LR
+                        A(아이디어 구상) --> B[프롬프트 입력]
+                        B --> C{Canvas 생성}
+                        C --> D[미리보기 확인]
+                        D --> E{수정 필요?}
+                        E -- Yes --> F[채팅으로 피드백]
+                        F --> C
+                        E -- No --> G[수업 활용/공유]
+                        
+                        style A fill:#f9f,stroke:#333,stroke-width:2px
+                        style G fill:#6f9,stroke:#333,stroke-width:2px
+                        style C fill:#6bf,stroke:#333,stroke-width:2px
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Showcases -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-lightbulb text-3xl text-yellow-500 mr-3"></i>
+                <h2 class="text-3xl font-bold">2. 활용 사례 (수업 도구)</h2>
+            </div>
+            <p class="mb-8 text-gray-600">아래는 Canvas를 통해 2025년도 수업에 사용했던 실제 사례들입니다.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <h3 class="font-bold text-xl mb-2">기체의 법칙 설명 카드</h3>
+                    <p class="text-gray-600 mb-4 text-sm">기체의 법칙을 학생 스스로 설명하도록 할 때 사용했던 드래그앤드롭형 상태변수 카드.</p>
+                    <a href="https://abcdwh-boop.github.io/SciClass/" target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>샘플 페이지 열기
+                    </a>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                    <h3 class="font-bold text-xl mb-2">이상기체 시뮬레이션</h3>
+                    <p class="text-gray-600 mb-4 text-sm">기체의 온도와 압력에 따라 입자 운동이 어떻게 변하는지 보여주는 시뮬레이션.</p>
+                    <a href="https://abcdwh-boop.github.io/SciClass/gasimulation" target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>샘플 페이지 열기
+                    </a>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+                    <h3 class="font-bold text-xl mb-2">보일의 법칙 보드게임</h3>
+                    <p class="text-gray-600 mb-4 text-sm">기체의 압력과 부피 관계를 보드게임으로 구현(티키토플 보드게임 방식).</p>
+                    <a href="https://abcdwh-boop.github.io/SciClass/gas_law.html" target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>샘플 페이지 열기
+                    </a>
+                </div>
+                <div class="card bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
+                    <h3 class="font-bold text-xl mb-2">달의 위상변화 모형</h3>
+                    <p class="text-gray-600 mb-4 text-sm">3D 모형을 활용하여 달의 위상 변화 원리를 직관적으로 이해하기.</p>
+                    <a href="https://abcdwh-boop.github.io/SciClass/ball" target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                        <i class="fas fa-external-link-alt mr-2"></i>샘플 페이지 열기
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Practice -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-tools text-3xl text-indigo-600 mr-3"></i>
+                <h2 class="text-3xl font-bold">3. 직접 실습해보기 (따라하기)</h2>
+            </div>
+            
+            <div class="bg-indigo-50 p-6 rounded-xl mb-8 border border-indigo-100">
+                <h3 class="font-bold mb-2"><i class="fas fa-play-circle mr-2"></i>공통 방법</h3>
+                <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Gemini 채팅창에 아래의 <strong>프롬프트(명령어)</strong>를 입력합니다.</li>
+                    <li>오른쪽 <strong>Canvas 창</strong>에 생성된 내용을 확인합니다.</li>
+                    <li>상단의 <strong>'미리보기(Preview)'</strong> 버튼을 눌러 실제 작동을 테스트합니다.</li>
+                    <li>수정이 필요하면 채팅으로 "글씨를 크게 해줘" 또는 "배경을 파란색으로 바꿔줘"라고 요청합니다.</li>
+                </ol>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">예제 1</span>
+                    <h4 class="text-xl font-bold mb-2">무작위 발표자 뽑기 도구</h4>
+                    <p class="text-gray-600 bg-gray-50 p-3 rounded border italic mb-2">"우리 반 학생 20명의 이름을 넣을 수 있는 입력창이 있고, 버튼을 누르면 화려한 효과와 함께 한 명을 무작위로 뽑아주는 웹페이지를 만들어줘."</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">예제 2</span>
+                    <h4 class="text-xl font-bold mb-2">분수 덧셈 시각화 도구</h4>
+                    <p class="text-gray-600 bg-gray-50 p-3 rounded border italic mb-2">"초등학생이 분수의 덧셈을 이해할 수 있도록 피자 모양 그림을 활용해 시각적으로 보여주는 인터랙티브 학습 도구를 HTML로 작성해줘."</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">예제 3</span>
+                    <h4 class="text-xl font-bold mb-2">영어 단어 맞추기 행맨 게임</h4>
+                    <p class="text-gray-600 bg-gray-50 p-3 rounded border italic mb-2">"초급 수준의 영어 단어를 맞추는 행맨 게임을 만들어줘. 힌트 버튼이 있어야 하고, 틀릴 때마다 그림이 그려지게 해줘."</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">예제 4</span>
+                    <h4 class="text-xl font-bold mb-2">수업 성찰 일지 생성기</h4>
+                    <p class="text-gray-600 bg-gray-50 p-3 rounded border italic mb-2">"오늘 배운 내용을 입력하면 자동으로 세 가지 핵심 질문을 생성해주고, 답변을 적으면 PDF로 저장할 수 있는 깔끔한 성찰 일지 양식을 웹으로 만들어줘."</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-2 inline-block">예제 5</span>
+                    <h4 class="text-xl font-bold mb-2">역사 연표 퀴즈</h4>
+                    <p class="text-gray-600 bg-gray-50 p-3 rounded border italic mb-2">"조선시대 주요 사건들을 드래그 앤 드롭으로 순서대로 배치하는 퀴즈 도구를 만들어줘. 정답 확인 기능과 점수 시스템을 포함해줘."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Advanced Tool (Bonus Section) -->
+        <section class="mb-16">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-star text-3xl text-yellow-500 mr-3"></i>
+                <h2 class="text-3xl font-bold text-gray-800 underline decoration-yellow-400 decoration-4 underline-offset-8">보너스: 구글 시트 연동 채점 도구</h2>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-dashed border-indigo-200">
+                <p class="mb-6 text-gray-700 italic">"실습까지 마친 선생님들을 위한 고급 팁! 구글 설문과 시트를 활용해 더욱 강력한 채점 시스템을 구축해 보세요."</p>
+                
+                <h3 class="font-bold text-lg mb-4 text-indigo-700"><i class="fas fa-stream mr-2"></i>데이터 흐름 및 제작 과정</h3>
+                <div class="bg-gray-50 p-6 rounded-xl mb-8 flex justify-center border border-gray-200">
+                    <div class="mermaid w-full">
+                        graph TD
+                            A[구글 설문: 서술형 퀴즈] --> B[구글 시트: 응답 자동 저장]
+                            B --> C{Google Apps Script}
+                            C -- 데이터 추출 --> D[HTML/JS 채점 웹 앱]
+                            D -- AI 채점 요청 --> E[Gemini API]
+                            E -- 채점 결과 반환 --> D
+                            D -- 최종 점수 전송 --> B
+                            
+                            style A fill:#f9f,stroke:#333
+                            style B fill:#dfd,stroke:#333
+                            style E fill:#fff4dd,stroke:#333
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Basic Tool -->
+                    <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-all shadow-sm flex flex-col">
+                        <h4 class="font-bold mb-2 text-indigo-600">간편 채점 도구 (기본형)</h4>
+                        <p class="text-sm text-gray-600 mb-6 flex-grow">시트 데이터를 웹으로 불러와 교사가 수동으로 빠르게 점수를 매기고 시트에 반영하는 도구입니다.</p>
+                        <div class="space-y-2">
+                            <a href="https://docs.google.com/spreadsheets/d/11mqjyjcUozNlKnIE_ZpGh3j_jBLeBSGRlSBsKq2fHPo/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>샘플 확인
+                            </a>
+                            <a href="https://docs.google.com/spreadsheets/d/11mqjyjcUozNlKnIE_ZpGh3j_jBLeBSGRlSBsKq2fHPo/copy" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-white border border-indigo-600 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors">
+                                <i class="fas fa-copy mr-2"></i>배포용 사본 만들기
+                            </a>
+                        </div>
+                    </div>
+                    <!-- AI Tool -->
+                    <div class="p-5 border border-indigo-200 rounded-xl bg-indigo-50 hover:bg-white transition-all shadow-sm flex flex-col">
+                        <h4 class="font-bold mb-2 text-indigo-600">AI 채점 기능 탑재 버전</h4>
+                        <p class="text-sm text-gray-600 mb-6 flex-grow">Gemini API를 연동하여 학생의 답변을 분석하고, 예시 답안과 비교하여 자동으로 가채점합니다.</p>
+                        <div class="space-y-2">
+                            <a href="https://docs.google.com/spreadsheets/d/1zRsOL_OZcot-q-fuaZQqFz_DAmiBJGSaEDEaNZc0lcc/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-robot mr-2"></i>샘플 확인
+                            </a>
+                            <a href="https://docs.google.com/spreadsheets/d/1zRsOL_OZcot-q-fuaZQqFz_DAmiBJGSaEDEaNZc0lcc/copy" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-white border border-purple-600 text-purple-600 rounded-lg font-bold hover:bg-purple-50 transition-colors">
+                                <i class="fas fa-file-export mr-2"></i>배포용 사본 만들기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Key Instructions -->
+                <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-inner">
+                    <h4 class="font-bold mb-3"><i class="fas fa-key mr-2"></i>Gemini API 키 발급 방법</h4>
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                        <li><strong>Google AI Studio</strong>(<a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 underline">aistudio.google.com</a>)에 접속합니다.</li>
+                        <li>좌측 메뉴의 <strong>'Get API key'</strong> 버튼을 클릭합니다.</li>
+                        <li><strong>'Create API key in new project'</strong>를 클릭하여 키를 생성합니다.</li>
+                        <li>생성된 키를 복사하여 도구의 <strong>설정(Settings)</strong> 메뉴에 입력하면 AI 채점 기능이 활성화됩니다.</li>
+                    </ol>
+                    <p class="mt-3 text-xs text-red-500 font-bold">* 주의: API 키는 개인적인 자산이므로 타인에게 공유되지 않도록 주의하세요.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Message -->
+        <section class="text-center py-16 px-6 bg-indigo-600 text-white rounded-3xl shadow-2xl overflow-hidden relative">
+            <div class="relative z-10">
+                <i class="fas fa-rocket text-5xl mb-6 animate-bounce"></i>
+                <h2 class="text-3xl font-bold mb-6">마치며: 작지만 강력한 변화의 시작</h2>
+                <div class="max-w-2xl mx-auto space-y-4 text-lg opacity-95">
+                    <p>
+                        "코딩을 모른다"는 것은 더 이상 창작의 걸림돌이 아닙니다.<br>
+                        선생님의 교육적 아이디어가 Gemini를 만나면 단 몇 분 만에 훌륭한 수업 도구가 됩니다.
+                    </p>
+                    <p class="font-bold text-yellow-300">
+                        완벽한 도구를 만들려고 하기보다,<br>
+                        오늘 당장 교실에서 사용할 작은 도구부터 시작해 보세요.
+                    </p>
+                    <p>
+                        디지털 전환 시대, 인공지능은 선생님의 전문성을 더욱 빛나게 해줄 든든한 조력자가 될 것입니다.
+                        쉽고 효과적인 나만의 수업 도구 제작, 지금 바로 시작해 볼까요?
+                    </p>
+                </div>
+            </div>
+            <!-- Decorative circle -->
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-indigo-500 rounded-full opacity-50"></div>
+            <div class="absolute -top-20 -left-20 w-48 h-48 bg-indigo-400 rounded-full opacity-30"></div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white py-10 mt-20 text-center">
+        <p class="opacity-70">&copy; 2024 교사 연수 자료 - Gemini Canvas 활용 가이드</p>
+        <p class="text-sm mt-2">이 페이지는 Gemini에 의해 생성되었습니다.</p>
+    </footer>
+
+</body>
+</html>
