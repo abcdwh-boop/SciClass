@@ -1,0 +1,249 @@
+import React, { useState } from 'react';
+import { RefreshCw, Info, Globe, Sun, Zap } from 'lucide-react';
+
+const SolarSystemApp = () => {
+  const [flippedCards, setFlippedCards] = useState({});
+
+  const solarSystemData = [
+    {
+      id: 'sun',
+      name: '태양 (The Sun)',
+      type: '항성',
+      color: 'bg-orange-600',
+      description: '태양계의 중심이자 유일한 별. 전체 질량의 99.8%를 차지하며 막대한 에너지를 방출합니다.',
+      frontInfo: ['표면 온도: 약 6,000°C', '중심 온도: 약 1,500만°C'],
+      backInfo: {
+        radius: '695,700 km (지구의 약 109배)',
+        period: '은하 중심 공전 약 2.3억 년',
+        gravity: '27.9g (지구의 28배)',
+        classification: '항성 (G형 주계열성)'
+      }
+    },
+    {
+      id: 'mercury',
+      name: '수성 (Mercury)',
+      type: '지구형 행성',
+      color: 'bg-gray-500',
+      description: '태양과 가장 가깝고 가장 작은 행성. 대기가 거의 없어 낮과 밤의 온도 차가 매우 큽니다.',
+      frontInfo: ['크기가 가장 작음', '운석 구덩이가 많음'],
+      backInfo: {
+        radius: '2,440 km (0.38배)',
+        period: '88일',
+        gravity: '0.38g',
+        classification: '내행성 / 지구형 행성'
+      }
+    },
+    {
+      id: 'venus',
+      name: '금성 (Venus)',
+      type: '지구형 행성',
+      color: 'bg-yellow-700',
+      description: '두꺼운 이산화탄소 대기층으로 인한 강력한 온실효과로 표면 온도가 가장 높은 행성입니다.',
+      frontInfo: ['밤하늘의 샛별', '가장 뜨거운 행성'],
+      backInfo: {
+        radius: '6,052 km (0.95배)',
+        period: '225일',
+        gravity: '0.91g',
+        classification: '내행성 / 지구형 행성'
+      }
+    },
+    {
+      id: 'earth',
+      name: '지구 (Earth)',
+      type: '지구형 행성',
+      color: 'bg-blue-600',
+      description: '액체 상태의 물과 생명체가 존재하는 유일한 행성. 푸른색 바다가 특징입니다.',
+      frontInfo: ['생명체의 고향', '위성: 달'],
+      backInfo: {
+        radius: '6,371 km (1.0배)',
+        period: '365.25일',
+        gravity: '1.0g (기준)',
+        classification: '내행성 / 지구형 행성'
+      }
+    },
+    {
+      id: 'mars',
+      name: '화성 (Mars)',
+      type: '지구형 행성',
+      color: 'bg-red-600',
+      description: '산화철 성분의 붉은 토양으로 덮여 있으며, 제2의 지구로 불리는 탐사의 중심지입니다.',
+      frontInfo: ['붉은 행성', '극관 존재'],
+      backInfo: {
+        radius: '3,390 km (0.53배)',
+        period: '687일',
+        gravity: '0.38g',
+        classification: '외행성 / 지구형 행성'
+      }
+    },
+    {
+      id: 'jupiter',
+      name: '목성 (Jupiter)',
+      type: '목성형 행성',
+      color: 'bg-amber-600',
+      description: '태양계 최대의 행성. 거대 가스 행성으로 가로 줄무늬와 대적점이 특징입니다.',
+      frontInfo: ['가장 큰 행성', '대적점 소용돌이'],
+      backInfo: {
+        radius: '69,911 km (11배)',
+        period: '11.9년',
+        gravity: '2.53g',
+        classification: '외행성 / 목성형 행성'
+      }
+    },
+    {
+      id: 'saturn',
+      name: '토성 (Saturn)',
+      type: '목성형 행성',
+      color: 'bg-yellow-500',
+      description: '아름답고 뚜렷한 고리를 가졌으며, 밀도가 매우 낮아 물에 뜰 수 있을 정도입니다.',
+      frontInfo: ['고리의 행성', '낮은 밀도'],
+      backInfo: {
+        radius: '58,232 km (9배)',
+        period: '29.5년',
+        gravity: '1.07g',
+        classification: '외행성 / 목성형 행성'
+      }
+    },
+    {
+      id: 'uranus',
+      name: '천왕성 (Uranus)',
+      type: '목성형 행성',
+      color: 'bg-cyan-500',
+      description: '자전축이 옆으로 완전히 누운 채 공전하는 청록색 얼음 거대 행성입니다.',
+      frontInfo: ['누워서 도는 행성', '청록색 표면'],
+      backInfo: {
+        radius: '25,362 km (4배)',
+        period: '84년',
+        gravity: '0.89g',
+        classification: '외행성 / 목성형 행성'
+      }
+    },
+    {
+      id: 'neptune',
+      name: '해왕성 (Neptune)',
+      type: '목성형 행성',
+      color: 'bg-indigo-700',
+      description: '태양에서 가장 먼 행성. 강한 바람과 폭풍이 치는 푸른 진주 같은 행성입니다.',
+      frontInfo: ['가장 먼 행성', '강력한 폭풍'],
+      backInfo: {
+        radius: '24,622 km (3.9배)',
+        period: '165년',
+        gravity: '1.14g',
+        classification: '외행성 / 목성형 행성'
+      }
+    }
+  ];
+
+  const handleFlip = (id) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 p-6 md:p-10 font-sans text-slate-100">
+      <header className="mb-12 text-center">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-yellow-200 via-blue-400 to-purple-500 bg-clip-text text-transparent">
+          태양계 탐사 카드
+        </h1>
+        <p className="text-slate-400 max-w-2xl mx-auto">
+          태양계의 신비로운 구성원들을 소개합니다. 카드를 클릭하면 상세 데이터를 확인할 수 있습니다.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {solarSystemData.map((planet) => (
+          <div 
+            key={planet.id}
+            className="relative h-96 w-full cursor-pointer group"
+            style={{ perspective: '1000px' }}
+            onClick={() => handleFlip(planet.id)}
+          >
+            <div 
+              className={`relative w-full h-full transition-all duration-700`}
+              style={{ 
+                transformStyle: 'preserve-3d',
+                transform: flippedCards[planet.id] ? 'rotateY(180deg)' : 'rotateY(0deg)'
+              }}
+            >
+              
+              {/* Front Side */}
+              <div 
+                className="absolute inset-0 flex flex-col bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden hover:border-blue-500/50 transition-colors"
+                style={{ backfaceVisibility: 'hidden' }}
+              >
+                <div className={`h-40 w-full ${planet.color} flex items-center justify-center relative overflow-hidden`}>
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className="w-24 h-24 rounded-full bg-white/20 blur-xl animate-pulse" />
+                  {planet.id === 'sun' ? <Sun size={64} className="text-white relative z-10" /> : <Globe size={64} className="text-white relative z-10" />}
+                </div>
+                
+                <div className="p-5 flex flex-col flex-grow">
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="text-xl font-bold">{planet.name}</h2>
+                    <span className="text-[10px] uppercase tracking-wider bg-slate-800 px-2 py-1 rounded text-slate-300 font-semibold border border-slate-700">
+                      {planet.type}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400 line-clamp-2 mb-4">
+                    {planet.description}
+                  </p>
+                  <div className="mt-auto space-y-2">
+                    {planet.frontInfo.map((info, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-slate-300">
+                        <Zap size={12} className="text-blue-400" />
+                        {info}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-center text-blue-400 text-xs font-bold gap-1 group-hover:animate-bounce">
+                    <RefreshCw size={14} /> 클릭하여 뒷면 확인
+                  </div>
+                </div>
+              </div>
+
+              {/* Back Side */}
+              <div 
+                className="absolute inset-0 flex flex-col bg-slate-800 rounded-2xl border-2 border-blue-500/30 shadow-2xl overflow-hidden"
+                style={{ 
+                  backfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)'
+                }}
+              >
+                <div className="p-6 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
+                    <Info size={18} className="text-blue-400" />
+                    <h3 className="font-bold text-lg">상세 제원</h3>
+                  </div>
+                  
+                  <div className="space-y-4 flex-grow">
+                    <DataRow label="반지름" value={planet.backInfo.radius} />
+                    <DataRow label="공전 주기" value={planet.backInfo.period} />
+                    <DataRow label="중력" value={planet.backInfo.gravity} />
+                    <DataRow label="분류" value={planet.backInfo.classification} />
+                  </div>
+
+                  <div className="mt-auto text-center text-slate-500 text-xs py-2 bg-slate-900/50 rounded-lg">
+                    {planet.name} 탐사 보고서
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const DataRow = ({ label, value }) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{label}</span>
+    <span className="text-sm text-slate-200 font-medium">{value}</span>
+  </div>
+);
+
+export default function App() {
+  return <SolarSystemApp />;
+}
