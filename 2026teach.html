@@ -151,7 +151,7 @@
                 </div>
             </div>
 
-            <!-- Sharing Guide Sections -->
+             <!-- Sharing Guide Section (1) -->
             <div class="bg-green-50 p-8 rounded-2xl shadow-sm border border-green-100 mb-8">
                 <h3 class="text-2xl font-bold mb-6 flex items-center text-green-700">
                     <i class="fas fa-user-circle mr-3"></i>제작한 도구 공유하기(1) - 개인 계정일 때 가능
@@ -177,38 +177,100 @@
                 </div>
             </div>
 
+            <!-- Sharing Guide Section (2) -->
             <div class="bg-blue-50 p-8 rounded-2xl shadow-sm border border-blue-100 mb-12">
                 <h3 class="text-2xl font-bold mb-6 flex items-center text-blue-700">
-                    <i class="fas fa-globe mr-3"></i>제작한 도구 공유하기(2) - 웹으로 공유하기
+                    <i class="fas fa-globe mr-3"></i>제작한 도구 공유하기(2) - 웹으로 공유하기 (추천 사이트)
                 </h3>
                 <p class="text-gray-600 mb-8 font-medium">학교 계정 제약 없이, 학생들에게 깔끔한 웹 사이트 형태로 도구를 배포할 때 추천하는 방법입니다.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <!-- Method A: GitHub -->
                     <div class="bg-white p-6 rounded-2xl border border-blue-200 shadow-sm">
                         <h4 class="font-bold text-lg mb-4 text-gray-800 flex items-center">
-                            <i class="fab fa-github mr-2"></i>방법 A. GitHub
+                            <i class="fab fa-github mr-2"></i>방법 A. GitHub (전통적인 방식)
                         </h4>
                         <ul class="space-y-4 text-sm text-gray-600">
-                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">1.</span> index.html로 저장</li>
-                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">2.</span> GitHub에 새 저장소 만들기</li>
-                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">3.</span> 업로드 후 Pages 설정 활성화</li>
+                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">1.</span> Canvas 코드를 복사해 메모장에 붙여넣고 <b>index.html</b>로 저장합니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">2.</span> <a href="https://github.com/" target="_blank" class="text-blue-600 underline font-bold">GitHub(github.com)</a>에 접속해 새 저장소(New Repo)를 만듭니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">3.</span> index.html 파일을 업로드하고 Commit 합니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-blue-600 mr-2">4.</span> Settings > Pages 메뉴에서 Branch를 'main'으로 설정하고 Save 합니다.</li>
                         </ul>
                     </div>
+
+                    <!-- Method B: Netlify -->
                     <div class="bg-white p-6 rounded-2xl border border-teal-200 shadow-sm">
                         <h4 class="font-bold text-lg mb-4 text-gray-800 flex items-center">
                             <i class="fas fa-cloud-upload-alt mr-2 text-teal-500"></i>방법 B. Netlify (가장 간편함)
                         </h4>
                         <ul class="space-y-4 text-sm text-gray-600">
-                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">1.</span> index.html을 폴더에 넣기</li>
-                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">2.</span> Netlify Drop 사이트 접속</li>
-                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">3.</span> 폴더를 화면으로 드래그 앤 드롭</li>
+                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">1.</span> <b>index.html</b> 파일을 하나의 새 폴더 안에 넣습니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">2.</span> <a href="https://app.netlify.com/drop" target="_blank" class="text-teal-600 underline font-bold">Netlify Drop(netlify.com/drop)</a>에 접속합니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">3.</span> 준비한 폴더를 웹사이트 화면 중앙의 <b>박스 안으로 드래그</b>합니다.</li>
+                            <li class="flex items-start"><span class="font-bold text-teal-600 mr-2">4.</span> 수 초 내로 고유 웹 사이트 주소(URL)가 즉시 생성됩니다.</li>
                         </ul>
+                        <div class="mt-4 p-3 bg-teal-50 rounded-lg text-xs text-teal-800">
+                            <i class="fas fa-magic mr-1"></i> 가입 없이도 배포 가능하며, 가입 시 생성된 주소를 관리하고 이름을 변경할 수 있어 추천합니다.
+                        </div>
                     </div>
+                </div>
+
+                <div class="p-4 bg-blue-600/10 rounded-lg text-xs text-blue-800 border border-blue-200 text-center">
+                    <i class="fas fa-link mr-1"></i> 생성된 웹 주소를 알림장(하이클래스, 클래스팅 등)에 게시하면 학생이 스마트기기로 즉시 참여할 수 있습니다.
+                </div>
+            </div>
+
+            <!-- Enhanced Prompt Guide Sub-section -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-indigo-100 mb-12 bg-gradient-to-br from-white to-indigo-50/30">
+                <h3 class="text-2xl font-bold mb-6 flex items-center text-indigo-700">
+                    <i class="fas fa-lightbulb mr-3"></i>더 복잡한 도구를 만들고 싶다면?
+                </h3>
+                <p class="text-gray-600 mb-6 text-sm leading-relaxed">
+                    단순한 예시를 넘어 선생님이 구체적으로 원하는 레이아웃이나 기능이 있을 때는 아래의 5가지 요소를 포함해 보세요. 
+                    훨씬 더 정확하고 세련된 결과물을 얻을 수 있습니다.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                    <div class="p-3 rounded-lg bg-white border border-indigo-100 shadow-sm">
+                        <div class="font-bold text-indigo-600 text-sm mb-1">1. 목적/사용자</div>
+                        <p class="text-[11px] text-gray-500 leading-tight">누구를 위한 도구인가요?</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white border border-indigo-100 shadow-sm">
+                        <div class="font-bold text-indigo-600 text-sm mb-1">2. 화면 구성</div>
+                        <p class="text-[11px] text-gray-500 leading-tight">상단/중앙의 구조는?</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white border border-indigo-100 shadow-sm">
+                        <div class="font-bold text-indigo-600 text-sm mb-1">3. 핵심 기능</div>
+                        <p class="text-[11px] text-gray-500 leading-tight">어떤 동작을 해야 하나요?</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white border border-indigo-100 shadow-sm">
+                        <div class="font-bold text-indigo-600 text-sm mb-1">4. 스타일</div>
+                        <p class="text-[11px] text-gray-500 leading-tight">색상이나 분위기는?</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-white border border-indigo-100 shadow-sm">
+                        <div class="font-bold text-indigo-600 text-sm mb-1">5. 기술 제약</div>
+                        <p class="text-[11px] text-gray-500 leading-tight">HTML 한 파일 제작 요청</p>
+                    </div>
+                </div>
+                
+                <div class="bg-indigo-900 text-white p-6 rounded-xl relative shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-bold text-indigo-200 uppercase tracking-widest text-xs italic">📋 심화 프롬프트 템플릿</h4>
+                        <span class="text-[10px] bg-indigo-700 px-2 py-1 rounded text-indigo-300">복사해서 사용하세요</span>
+                    </div>
+                    <pre class="text-sm overflow-x-auto whitespace-pre-wrap leading-relaxed font-mono border-l-2 border-indigo-400 pl-4">
+[제목]: 제작하고 싶은 프로그램 이름
+[목적]: 이 프로그램은 ~를 위한 도구입니다.
+
+[화면 구성]: 상단에 제목, 중앙에 핵심 기능, 하단에 설명
+[주요 기능]: 1. 입력 기능, 2. 결과 출력, 3. 저장 기능 등
+[디자인 요구사항]: 깔끔한 애플 스타일, 둥근 모서리, 파스텔톤
+[기술 제약]: HTML/JS/Tailwind CSS를 활용해 한 파일로 만들어줘.</pre>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Advanced Tool -->
+        <!-- Section 4: Advanced Tool (Bonus Section) -->
         <section class="mb-16">
             <div class="flex items-center mb-6">
                 <i class="fas fa-star text-3xl text-yellow-500 mr-3"></i>
@@ -216,49 +278,98 @@
             </div>
             <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-dashed border-indigo-200">
                 <p class="mb-6 text-gray-700 italic">"실습까지 마친 선생님들을 위한 고급 팁! 구글 설문과 시트를 활용해 더욱 강력한 채점 시스템을 구축해 보세요."</p>
-                <div class="mermaid w-full mb-8">
-                    graph TD
-                        A[구글 설문] --> B[구글 시트]
-                        B --> C{Apps Script}
-                        C -- 데이터 --> D[웹 채점 앱]
-                        D -- AI 분석 --> E[Gemini API]
-                        E -- 결과 --> D
-                        D -- 저장 --> B
+                
+                <h3 class="font-bold text-lg mb-4 text-indigo-700"><i class="fas fa-stream mr-2"></i>데이터 흐름 및 제작 과정</h3>
+                <div class="bg-gray-50 p-6 rounded-xl mb-8 flex justify-center border border-gray-200">
+                    <div class="mermaid w-full">
+                        graph TD
+                            A[구글 설문: 서술형 퀴즈] --> B[구글 시트: 응답 자동 저장]
+                            B --> C{Google Apps Script}
+                            C -- 데이터 추출 --> D[HTML/JS 채점 웹 앱]
+                            D -- AI 채점 요청 --> E[Gemini API]
+                            E -- 채점 결과 반환 --> D
+                            D -- 최종 점수 전송 --> B
+                            
+                            style A fill:#f9f,stroke:#333
+                            style B fill:#dfd,stroke:#333
+                            style E fill:#fff4dd,stroke:#333
+                    </div>
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 flex flex-col">
-                        <h4 class="font-bold mb-2 text-indigo-600 text-center">간편 채점 도구</h4>
-                        <a href="https://script.google.com/a/macros/gireum.sen.ms.kr/s/AKfycbzAnvgZ0lPJli4w53XB76SpZXa395GapsI1BIxXRtsTkZpyVNIzhHbzhCMrH3APVwJ-2Q/exec" target="_blank" class="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold mb-2">샘플 확인</a>
-                        <a href="https://docs.google.com/spreadsheets/d/11mqjyjcUozNlKnIE_ZpGh3j_jBLeBSGRlSBsKq2fHPo/copy" target="_blank" class="block w-full text-center px-4 py-2 bg-white border border-indigo-600 text-indigo-600 rounded-lg font-bold">사본 만들기</a>
+                    <!-- Basic Tool -->
+                    <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-all shadow-sm flex flex-col">
+                        <h4 class="font-bold mb-2 text-indigo-600">간편 채점 도구 (기본형)</h4>
+                        <p class="text-sm text-gray-600 mb-6 flex-grow">시트 데이터를 웹으로 불러와 교사가 수동으로 빠르게 점수를 매기고 시트에 반영하는 도구입니다.</p>
+                        <div class="space-y-2">
+                            <a href="https://script.google.com/a/macros/gireum.sen.ms.kr/s/AKfycbzAnvgZ0lPJli4w53XB76SpZXa395GapsI1BIxXRtsTkZpyVNIzhHbzhCMrH3APVwJ-2Q/exec" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>샘플 확인
+                            </a>
+                            <a href="https://docs.google.com/spreadsheets/d/11mqjyjcUozNlKnIE_ZpGh3j_jBLeBSGRlSBsKq2fHPo/copy" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-white border border-indigo-600 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors">
+                                <i class="fas fa-copy mr-2"></i>배포용 사본 만들기
+                            </a>
+                        </div>
                     </div>
-                    <div class="p-5 border border-indigo-200 rounded-xl bg-indigo-50 flex flex-col">
-                        <h4 class="font-bold mb-2 text-indigo-600 text-center">AI 채점 탑재형</h4>
-                        <a href="https://script.google.com/a/macros/gireum.sen.ms.kr/s/AKfycbz8xQcp8y23yrKZ-VW3V5neMS0K5JYNVdflfcICBvPs6jBQ1Gsrgkb7eGxhxtGIqlIjIQ/exec" target="_blank" class="block w-full text-center px-4 py-2 bg-purple-600 text-white rounded-lg font-bold mb-2">샘플 확인</a>
-                        <a href="https://docs.google.com/spreadsheets/d/1JE4v5mCJCHA_FU93psMXqAp_Lfr2DvNYV3xAvlxmS3E/copy" target="_blank" class="block w-full text-center px-4 py-2 bg-white border border-purple-600 text-purple-600 rounded-lg font-bold">사본 만들기</a>
+                    <!-- AI Tool -->
+                    <div class="p-5 border border-indigo-200 rounded-xl bg-indigo-50 hover:bg-white transition-all shadow-sm flex flex-col">
+                        <h4 class="font-bold mb-2 text-indigo-600">AI 채점 기능 탑재 버전</h4>
+                        <p class="text-sm text-gray-600 mb-6 flex-grow">Gemini API를 연동하여 학생의 답변을 분석하고, 예시 답안과 비교하여 자동으로 가채점합니다.</p>
+                        <div class="space-y-2">
+                            <a href="https://script.google.com/a/macros/gireum.sen.ms.kr/s/AKfycb8xQcp8y23yrKZ-VW3V5neMS0K5JYNVdflfcICBvPs6jBQ1Gsrgkb7eGxhxtGIqlIjIQ/exec" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-robot mr-2"></i>샘플 확인
+                            </a>
+                            <a href="https://docs.google.com/spreadsheets/d/1JE4v5mCJCHA_FU93psMXqAp_Lfr2DvNYV3xAvlxmS3E/copy" target="_blank" rel="noopener noreferrer" class="block w-full text-center px-4 py-2 bg-white border border-purple-600 text-purple-600 rounded-lg font-bold hover:bg-purple-50 transition-colors">
+                                <i class="fas fa-file-export mr-2"></i>배포용 사본 만들기
+                            </a>
+                        </div>
                     </div>
+                </div>
+
+                <!-- API Key Instructions -->
+                <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 shadow-inner">
+                    <h4 class="font-bold mb-3"><i class="fas fa-key mr-2"></i>Gemini API 키 발급 방법</h4>
+                    <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                        <li><strong>Google AI Studio</strong>(<a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 underline">aistudio.google.com</a>)에 접속합니다.</li>
+                        <li>좌측 메뉴의 <strong>'Get API key'</strong> 버튼을 클릭합니다.</li>
+                        <li><strong>'Create API key in new project'</strong>를 클릭하여 키를 생성합니다.</li>
+                        <li>생성된 키를 복사하여 도구의 <strong>설정(Settings)</strong> 메뉴에 입력하면 AI 채점 기능이 활성화됩니다.</li>
+                    </ol>
+                    <p class="mt-3 text-xs text-red-500 font-bold">* 주의: API 키는 개인적인 자산이므로 타인에게 공유되지 않도록 주의하세요.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Final Message -->
-        <section class="text-center py-16 px-6 pastel-final-bg text-gray-800 rounded-3xl shadow-sm border border-indigo-100 relative overflow-hidden">
+        <!-- Final Message (Updated to Pastel Theme) -->
+        <section class="text-center py-16 px-6 pastel-final-bg text-gray-800 rounded-3xl shadow-sm border border-indigo-100 overflow-hidden relative">
             <div class="relative z-10">
                 <i class="fas fa-rocket text-5xl mb-6 text-indigo-500"></i>
                 <h2 class="text-3xl font-bold mb-6 text-indigo-900">마치며: 작지만 강력한 변화의 시작</h2>
-                <p class="max-w-2xl mx-auto text-lg text-gray-700 leading-relaxed mb-6">
-                    선생님의 교육적 아이디어가 Gemini를 만나면 단 몇 분 만에 훌륭한 수업 도구가 됩니다. 오늘 당장 교실에서 사용할 작은 도구부터 시작해 보세요.
-                </p>
-                <p class="font-bold text-indigo-600">디지털 전환 시대, 인공지능은 선생님을 빛나게 해줄 든든한 조력자입니다.</p>
+                <div class="max-w-2xl mx-auto space-y-4 text-lg text-gray-700">
+                    <p>
+                        "코딩을 모른다"는 것은 더 이상 창작의 걸림돌이 아닙니다.<br>
+                        선생님의 교육적 아이디어가 Gemini를 만나면 단 몇 분 만에 훌륭한 수업 도구가 됩니다.
+                    </p>
+                    <p class="font-bold text-indigo-600 bg-white/50 inline-block px-4 py-1 rounded-full">
+                        완벽한 도구를 만들려고 하기보다,<br>
+                        오늘 당장 교실에서 사용할 작은 도구부터 시작해 보세요.
+                    </p>
+                    <p class="leading-relaxed">
+                        디지털 전환 시대, 인공지능은 선생님의 전문성을 더욱 빛나게 해줄 든든한 조력자가 될 것입니다.
+                        쉽고 효과적인 나만의 수업 도구 제작, 지금 바로 시작해 볼까요?
+                    </p>
+                </div>
             </div>
+            <!-- Decorative soft circles -->
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-white/40 rounded-full blur-3xl"></div>
+            <div class="absolute -top-20 -left-20 w-48 h-48 bg-indigo-200/30 rounded-full blur-2xl"></div>
         </section>
 
     </main>
 
     <footer class="bg-gray-800 text-white py-10 mt-20 text-center">
-        <p class="opacity-70">&copy; 2026 교사 연수 자료 - Gemini Canvas 활용 가이드</p>
+        <p class="opacity-70">&copy; 2024 교사 연수 자료 - Gemini Canvas 활용 가이드</p>
+        <p class="text-sm mt-2">이 페이지는 Gemini에 의해 생성되었습니다.</p>
     </footer>
 
 </body>
-
 </html>
-
