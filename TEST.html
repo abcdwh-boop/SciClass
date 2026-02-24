@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현실 레벨업: REAL LEVEL UP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 환경 설정
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'real-level-up-v1';
+
+        // 상태 관리 변수
+        let state = { totalTime: 0, logs: [], level: 1 };
+        const questLevels = [
+            { id: 'C', label: 'C급 (습관)', time: 1, color: 'bg-blue-500', desc: '이 닦기, 세수, 영양제 등' },
+            { id: 'B', label: 'B급 (정돈)', time: 3, color: 'bg-green-500', desc: '내 방 정리, 식기 반납 등' },
+            { id: 'A', label: 'A급 (학습)', time: 5, color: 'bg-purple-500', desc: '독서 30분, 문제집 1장 등' },
+            { id: 'S', label: 'S급 (도전)', time: 15, color: 'bg-red-500', desc: '도서관 방문, 자율 미션 등' }
+        ];
+
+        // UI 업데이트 함수
+        function updateUI() {
+            document.getElementById('totalTime').innerText = state.totalTime;
+            document.getElementById('levelNumber').innerText = state.level;
+            
+            const progress = state.totalTime % 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('nextLevelText').innerText = `다음 레벨까지 ${100 - progress}분`;
+
+            const logContainer = document.getElementById('logContainer');
+            if (state.logs && state.logs.length > 0) {
+                logContainer.innerHTML = state.logs.map(log => `
+                    <div class="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800/50">
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-500">✓</span>
+                            <span class="text-sm font-medium">${log.label}</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-yellow-500">+${log.time}분</p>
+                            <p class="text-[10px] text-gray-600">${log.timestamp}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                logContainer.innerHTML = `<p class="text-center py-10 text-gray-600 text-sm italic">수행한 퀘스트가 없습니다.</p>`;
+            }
+        }
+
+        // 인증 처리 (규칙 3 준수)
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+            }
+        };
+
+        initAuth();
+
+        let unsubscribeSnapshot = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) return;
+
+            // 기존 구독 해제
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            // 규칙 1 준수: artifacts/{appId}/public/data/{collectionName}/{docId}
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'status');
+            
+            unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    state = docSnap.data();
+                    updateUI();
+                    document.getElementById('loading').classList.add('hidden');
+                } else {
+                    // 문서가 없으면 초기화 생성
+                    setDoc(docRef, { totalTime: 0, logs: [], level: 1 }).catch(e => console.error("SetDoc Error:", e));
+                }
+            }, (err) => {
+                console.error("Firestore Permission Error:", err);
+                // 권한 에러 시 사용자에게 안내
+                if(err.code === 'permission-denied') {
+                   // 재인증 시도 등 처리 가능
+                }
+            });
+        });
+
+        // 퀘스트 추가 함수
+        window.addQuest = async (index) => {
+            if (!auth.currentUser) return;
+
+            const quest = questLevels[index];
+            const newTime = (state.totalTime || 0) + quest.time;
+            const newLevel = Math.floor(newTime / 100) + 1;
+            const newLog = {
+                id: Date.now().toString(),
+                label: quest.label,
+                time: quest.time,
+                timestamp: new Date().toLocaleString('ko-KR'),
+                userId: auth.currentUser.uid
+            };
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'status');
+            try {
+                await updateDoc(docRef, {
+                    totalTime: newTime,
+                    level: newLevel,
+                    logs: [newLog, ...(state.logs || [])].slice(0, 50)
+                });
+            } catch (e) {
+                console.error("Update Error:", e);
+            }
+        };
+
+        // 초기화 함수
+        window.resetData = async () => {
+            if (!auth.currentUser) return;
+            if (!confirm("이번 주 획득한 시간을 모두 정산하고 초기화할까요?")) return;
+            
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'status');
+            try {
+                await updateDoc(docRef, {
+                    totalTime: 0,
+                    logs: []
+                });
+            } catch (e) {
+                console.error("Reset Error:", e);
+            }
+        };
+
+        window.onload = () => {
+            const questContainer = document.getElementById('questContainer');
+            questLevels.forEach((q, index) => {
+                const btn = document.createElement('button');
+                btn.className = "flex items-center justify-between p-4 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 active:scale-95 transition-all text-left w-full mb-3";
+                btn.onclick = () => window.addQuest(index);
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="${q.color} w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">${q.id}</div>
+                        <div>
+                            <p class="font-bold text-sm text-gray-100">${q.label}</p>
+                            <p class="text-[11px] text-gray-400">${q.desc}</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-500 font-black">+${q.time}m</div>
+                `;
+                questContainer.appendChild(btn);
+            });
+        };
+    </script>
+    <style>
+        body { background-color: #020617; color: #f8fafc; font-family: sans-serif; overflow-x: hidden; }
+        .loading-screen { transition: opacity 0.5s; }
+        .hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="pb-24">
+    <!-- 로딩 화면 -->
+    <div id="loading" class="loading-screen fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center">
+        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-gray-400 font-medium text-sm">기사님, 현실 정보를 동기화 중입니다...</p>
+    </div>
+
+    <div class="max-w-md mx-auto p-4">
+        <!-- 헤더 -->
+        <header class="flex justify-between items-center mb-6 pt-4">
+            <div class="flex items-center gap-2">
+                <div class="bg-yellow-500 p-2 rounded-lg text-slate-950 text-xl">🏆</div>
+                <h1 class="text-xl font-bold tracking-tight">REAL LEVEL UP</h1>
+            </div>
+        </header>
+
+        <!-- 상태 카드 -->
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 mb-8 border border-slate-700 shadow-xl">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <p class="text-slate-400 text-sm font-medium">이번 주 누적 시간</p>
+                    <div class="flex items-baseline gap-1">
+                        <span id="totalTime" class="text-5xl font-black text-white">0</span>
+                        <span class="text-yellow-500 font-bold">min</span>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="inline-flex items-center gap-1 bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold mb-1">
+                        ⭐ LV. <span id="levelNumber">1</span>
+                    </div>
+                    <p class="text-slate-300 font-semibold text-sm">성실한 모험가</p>
+                </div>
+            </div>
+            <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-blue-500 h-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+            </div>
+            <p id="nextLevelText" class="text-[10px] text-slate-500 mt-2 text-right">다음 레벨까지 100분</p>
+        </div>
+
+        <!-- 퀘스트 섹션 -->
+        <section class="mb-8">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span class="text-blue-400 text-xl">⊕</span> 오늘의 퀘스트
+            </h2>
+            <div id="questContainer"></div>
+        </section>
+
+        <!-- 로그 섹션 -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold flex items-center gap-2 text-gray-400">⌛ 활동 로그</h2>
+                <button onclick="window.resetData()" class="text-xs text-gray-500 hover:text-red-400 underline decoration-dotted">초기화</button>
+            </div>
+            <div id="logContainer" class="space-y-2"></div>
+        </section>
+    </div>
+
+    <!-- 하단바 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-4 flex justify-around items-center z-50">
+        <div class="flex flex-col items-center gap-1 text-blue-500">
+            <span class="text-xl">🎮</span>
+            <span class="text-[10px] font-bold">퀘스트</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500 opacity-50">
+            <span class="text-xl">💰</span>
+            <span class="text-[10px] font-bold">상점</span>
+        </div>
+        <div class="flex flex-col items-center gap-1 text-gray-500 opacity-50">
+            <span class="text-xl">👤</span>
+            <span class="text-[10px] font-bold">프로필</span>
+        </div>
+    </div>
+</body>
+</html>
