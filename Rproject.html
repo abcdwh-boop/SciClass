@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: REAL WORLD - Player Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f4; /* Stone-100 warm neutral */
+            color: #1c1917; /* Stone-900 */
+        }
+
+        /* Chart Container Styling as per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* RPG Rarity Colors for Borders/Accents */
+        .rank-common { border-color: #9ca3af; background-color: #f3f4f6; } /* Gray */
+        .rank-uncommon { border-color: #22c55e; background-color: #ecfdf5; } /* Green */
+        .rank-rare { border-color: #3b82f6; background-color: #eff6ff; } /* Blue */
+        .rank-epic { border-color: #a855f7; background-color: #faf5ff; } /* Purple */
+        .rank-legendary { border-color: #eab308; background-color: #fefce8; } /* Gold */
+
+        .btn-press {
+            transition: all 0.1s;
+        }
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+        
+        .stat-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutral (Stone) base with RPG-standard Rarity Accent Colors (Gray, Green, Blue, Purple, Gold) -->
+    <!-- Application Structure Plan: 
+         1. Header: Gamified title and user profile summary.
+         2. Dashboard Core: 'Player Status' visualizing the impact of actions (GE Accumulation & Stat Growth).
+         3. Quest Board: Interactive list of activities from the source report. Clicking them simulates 'doing' the chore, updating the stats instantly.
+         4. System Mechanics: Accordion-style info regarding Time Bank, GM Rules, and Custom Quests to keep the interface clean but informative.
+         5. Simulation Log: A running history of today's actions to reinforce the connection between labor and reward.
+         Rationale: The user (6th grader) needs immediate visual feedback. Grouping by 'Stats' and 'Ranks' gamifies the chores. The single-page dashboard mimics a game menu.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Radar Chart: To visualize the 4 Stats (VIT, INT, STR, LUK). Goal: Show character balance/growth.
+         2. Doughnut Chart: To visualize the source of Game Energy (GE). Goal: Show which difficulty tiers are contributing most.
+         3. Progress Bar: Visual feedback for weekly GE goal.
+         4. Interactive Cards: Represents the Quests. Goal: Clear actionable items.
+         5. Text Blocks: Explaining rules (GM Quality Control, etc.) directly from the report.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-100 min-h-screen pb-12">
+
+    <!-- Header Section -->
+    <header class="bg-stone-900 text-stone-100 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-black tracking-tighter uppercase">Project: REAL WORLD <span class="text-xs font-normal text-stone-400 align-middle ml-2">v1.0</span></h1>
+                <p class="text-xs text-stone-400 hidden md:block">현실 서버 동기화 완료 | 플레이어: 아들</p>
+            </div>
+            <div class="text-right">
+                <div class="text-xs text-stone-400 uppercase tracking-widest">Total GE</div>
+                <div class="text-3xl font-black text-yellow-400 leading-none"><span id="total-ge-display">0</span> <span class="text-sm text-white">min</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- Intro / Context -->
+        <section class="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-stone-200">
+            <h2 class="text-xl font-bold text-stone-800 mb-2">👋 현실 서버 플레이어 가이드</h2>
+            <p class="text-stone-600 mb-4 leading-relaxed">
+                환영합니다, 플레이어님. 이 대시보드는 <strong>현실에서의 활동을 게임 에너지(GE)로 변환</strong>하는 시스템입니다. 
+                아래 퀘스트를 수행하여 스탯을 올리고 주말 자유 시간을 확보하세요. 
+                모든 활동은 데이터로 기록되며, 당신의 성장을 시각화합니다.
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">❤️ VIT: 생활습관</span>
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">🧠 INT: 지능/학습</span>
+                <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">💪 STR: 신체/가사</span>
+                <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">🍀 LUK: 도전</span>
+            </div>
+        </section>
+
+        <!-- Stats Dashboard -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Radar Chart: Player Stats -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col">
+                <h3 class="text-lg font-bold text-stone-800 mb-1">📊 플레이어 스탯 분석</h3>
+                <p class="text-sm text-stone-500 mb-4">수행한 퀘스트의 성격에 따른 능력치 분포입니다.</p>
+                <div class="flex-grow flex items-center justify-center w-full">
+                    <div class="chart-container">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart: GE Source -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-col">
+                <h3 class="text-lg font-bold text-stone-800 mb-1">⚡ 에너지원 분석</h3>
+                <p class="text-sm text-stone-500 mb-4">획득한 게임 시간(GE)이 어떤 등급의 활동에서 나왔는지 보여줍니다.</p>
+                <div class="flex-grow flex items-center justify-center w-full">
+                    <div class="chart-container">
+                        <canvas id="geSourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quest Board Section -->
+        <section class="mb-12">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 border-b border-stone-300 pb-2">
+                <div>
+                    <h2 class="text-2xl font-black text-stone-800">📜 퀘스트 보드</h2>
+                    <p class="text-sm text-stone-500 mt-1">수행한 활동을 클릭하여 완료 처리하세요. 즉시 보상이 지급됩니다.</p>
+                </div>
+                <!-- Filters -->
+                <div class="flex gap-2 mt-4 md:mt-0 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+                    <button onclick="filterQuests('all')" class="px-4 py-2 bg-stone-800 text-white text-sm font-bold rounded-lg hover:bg-stone-700 whitespace-nowrap">ALL</button>
+                    <button onclick="filterQuests('Common')" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-300 whitespace-nowrap">Common</button>
+                    <button onclick="filterQuests('Uncommon')" class="px-4 py-2 bg-green-100 text-green-700 text-sm font-bold rounded-lg hover:bg-green-200 whitespace-nowrap">Uncommon</button>
+                    <button onclick="filterQuests('Rare')" class="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200 whitespace-nowrap">Rare</button>
+                    <button onclick="filterQuests('Epic')" class="px-4 py-2 bg-purple-100 text-purple-700 text-sm font-bold rounded-lg hover:bg-purple-200 whitespace-nowrap">Epic</button>
+                    <button onclick="filterQuests('Legendary')" class="px-4 py-2 bg-yellow-100 text-yellow-700 text-sm font-bold rounded-lg hover:bg-yellow-200 whitespace-nowrap">Legendary</button>
+                </div>
+            </div>
+
+            <!-- Quest Grid (Populated by JS) -->
+            <div id="quest-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Quests will be injected here -->
+            </div>
+        </section>
+
+        <!-- System Mechanics (Info) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <!-- Time Bank -->
+            <div class="bg-stone-800 text-stone-200 p-6 rounded-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🏦</div>
+                <h3 class="text-xl font-bold text-white mb-3">🔋 타임 뱅크 (Time Bank)</h3>
+                <p class="text-sm mb-4 opacity-80">평일에 획득한 에너지는 소멸하지 않고 주말 인벤토리에 저장됩니다.</p>
+                <ul class="text-sm space-y-2">
+                    <li class="flex items-start"><span class="mr-2">📥</span> <span><strong>저축(Stacking):</strong> 남은 시간은 다음 주로 이월 가능</span></li>
+                    <li class="flex items-start"><span class="mr-2">🎁</span> <span><strong>교환:</strong> 모은 시간으로 '대작 게임 구매권' 등 특수 아이템 교환 가능</span></li>
+                </ul>
+            </div>
+
+            <!-- Quality Control -->
+            <div class="bg-stone-200 text-stone-800 p-6 rounded-xl border border-stone-300 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛡️</div>
+                <h3 class="text-xl font-bold mb-3">⚖️ GM 품질 검토</h3>
+                <p class="text-sm mb-4 text-stone-600">퀘스트 품질에 따라 보상이 달라집니다.</p>
+                <ul class="text-sm space-y-2">
+                    <li class="flex items-start"><span class="mr-2 text-red-500">⚠️</span> <span><strong>버그 발생:</strong> 대충 수행 시 보상 50% 삭감 또는 취소</span></li>
+                    <li class="flex items-start"><span class="mr-2 text-blue-600">💎</span> <span><strong>클린 플레이:</strong> 주간 '잔소리 스택 0' 달성 시 +15분 보너스</span></li>
+                </ul>
+            </div>
+
+            <!-- Custom Quests -->
+            <div class="bg-white text-stone-800 p-6 rounded-xl border border-stone-300 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛠️</div>
+                <h3 class="text-xl font-bold mb-3">✨ 커스텀 퀘스트 제작소</h3>
+                <p class="text-sm mb-4 text-stone-600">스스로 미션을 정하고 GM(부모님)의 승인을 받으세요.</p>
+                <div class="bg-stone-50 p-3 rounded-lg text-sm border border-stone-200 mb-2">
+                    <span class="font-bold text-stone-900">예시:</span> "이번 주엔 계란말이 요리에 도전!"
+                </div>
+                <p class="text-xs text-stone-500 text-right">보상: 난이도에 따라 GM 책정 (15분+α)</p>
+            </div>
+        </section>
+
+        <!-- Simulation Log (Feedback) -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-stone-800">📝 활동 로그 (Simulation)</h3>
+                <button onclick="resetData()" class="text-xs text-red-500 hover:text-red-700 underline">데이터 초기화</button>
+            </div>
+            <div id="activity-log" class="h-40 overflow-y-auto bg-stone-50 rounded-lg p-4 text-sm font-mono text-stone-600 space-y-2 border border-stone-200">
+                <div class="text-center text-stone-400 italic py-10">아직 수행한 퀘스트가 없습니다. 위 퀘스트 보드에서 활동을 완료해보세요!</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-900 text-stone-500 py-8 text-center text-sm">
+        <p class="mb-2">PROJECT: REAL WORLD</p>
+        <p>"현실의 레벨이 오를수록, 당신의 주말은 더욱 풍요로워집니다." - GM 엄마</p>
+    </footer>
+
+    <script>
+        // --- DATA DEFINITIONS ---
+        
+        // Quest Database derived from the Source Report
+        const quests = [
+            // Common (1 min) - VIT
+            { id: 1, name: "잔소리 전 양치/세수", desc: "스스로 씻기 완료", rank: "Common", time: 1, stat: "VIT", icon: "🚿" },
+            { id: 2, name: "이부자리 정리", desc: "자고 일어난 자리 정돈", rank: "Common", time: 1, stat: "VIT", icon: "🛏️" },
+            { id: 3, name: "쓰레기통 비우기", desc: "내 방 쓰레기 처리", rank: "Common", time: 1, stat: "VIT", icon: "🗑️" },
+            
+            // Uncommon (3 min) - STR/VIT
+            { id: 4, name: "식탁 차리기 돕기", desc: "수저 놓기, 반찬 꺼내기", rank: "Uncommon", time: 3, stat: "STR", icon: "🍽️" },
+            { id: 5, name: "설거지 보조", desc: "간단한 설거지 돕기", rank: "Uncommon", time: 3, stat: "STR", icon: "🧼" },
+            { id: 6, name: "내 방 바닥 닦기", desc: "청소기로 밀거나 닦기", rank: "Uncommon", time: 3, stat: "VIT", icon: "🧹" },
+
+            // Rare (5 min) - INT
+            { id: 7, name: "독서 후 '한 줄 로그'", desc: "책 읽고 생각 기록하기", rank: "Rare", time: 5, stat: "INT", icon: "📖" },
+            { id: 8, name: "일일 학습 목표 달성", desc: "계획된 공부 완료", rank: "Rare", time: 5, stat: "INT", icon: "✏️" },
+
+            // Epic (10 min) - STR/LUK
+            { id: 9, name: "도서관 대출증 발급", desc: "혼자 가서 발급받기", rank: "Epic", time: 10, stat: "LUK", icon: "💳" },
+            { id: 10, name: "혼자 마트 장보기", desc: "심부름 미션 수행", rank: "Epic", time: 10, stat: "LUK", icon: "🛒" },
+            { id: 11, name: "줄넘기 500개", desc: "체력 단련 수행", rank: "Epic", time: 10, stat: "STR", icon: "🏃" },
+
+            // Legendary (15 min) - LUK
+            { id: 12, name: "셀프 커스텀 미션", desc: "내가 정한 새로운 도전 (GM 승인 필)", rank: "Legendary", time: 15, stat: "LUK", icon: "👑" },
+        ];
+
+        // Rank Configuration for Styling
+        const rankConfig = {
+            'Common': { color: 'text-stone-600', border: 'rank-common', bg: 'bg-stone-100', label: 'Common (1 min)' },
+            'Uncommon': { color: 'text-green-600', border: 'rank-uncommon', bg: 'bg-green-50', label: 'Uncommon (3 min)' },
+            'Rare': { color: 'text-blue-600', border: 'rank-rare', bg: 'bg-blue-50', label: 'Rare (5 min)' },
+            'Epic': { color: 'text-purple-600', border: 'rank-epic', bg: 'bg-purple-50', label: 'Epic (10 min)' },
+            'Legendary': { color: 'text-yellow-600', border: 'rank-legendary', bg: 'bg-yellow-50', label: 'Legendary (15+ min)' }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let state = {
+            totalGE: 0,
+            stats: { VIT: 0, INT: 0, STR: 0, LUK: 0 },
+            questCounts: { Common: 0, Uncommon: 0, Rare: 0, Epic: 0, Legendary: 0 },
+            history: []
+        };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderQuestGrid(quests);
+            initCharts();
+            updateUI();
+        });
+
+        // --- CORE FUNCTIONS ---
+
+        function renderQuestGrid(questList) {
+            const grid = document.getElementById('quest-grid');
+            grid.innerHTML = '';
+
+            questList.forEach(q => {
+                const config = rankConfig[q.rank];
+                const card = document.createElement('div');
+                card.className = `border-l-4 ${config.border} bg-white p-4 rounded-r-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer btn-press flex justify-between items-center group`;
+                card.onclick = () => completeQuest(q.id);
+
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl pt-1">${q.icon}</div>
+                        <div>
+                            <h4 class="font-bold text-stone-800 group-hover:text-stone-900">${q.name}</h4>
+                            <p class="text-xs text-stone-500 mb-1">${q.desc}</p>
+                            <span class="text-[10px] uppercase font-bold tracking-wider ${config.color}">${q.rank} • +${q.time} GE</span>
+                        </div>
+                    </div>
+                    <div class="text-stone-300 group-hover:text-stone-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterQuests(filter) {
+            const filtered = filter === 'all' ? quests : quests.filter(q => q.rank === filter);
+            renderQuestGrid(filtered);
+        }
+
+        function completeQuest(id) {
+            const quest = quests.find(q => q.id === id);
+            if (!quest) return;
+
+            // Update State
+            state.totalGE += quest.time;
+            state.stats[quest.stat] += 1; // Increment stat counter
+            state.questCounts[quest.rank] += quest.time; // Add time to rank bucket for doughnut chart
+            
+            // Add to History
+            const timestamp = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            state.history.unshift({ ...quest, timestamp });
+
+            // Trigger Updates
+            updateUI();
+            updateCharts();
+            animateCounter(state.totalGE);
+        }
+
+        function updateUI() {
+            // Update Log
+            const logContainer = document.getElementById('activity-log');
+            if (state.history.length === 0) {
+                logContainer.innerHTML = '<div class="text-center text-stone-400 italic py-10">아직 수행한 퀘스트가 없습니다. 위 퀘스트 보드에서 활동을 완료해보세요!</div>';
+            } else {
+                logContainer.innerHTML = state.history.map(item => `
+                    <div class="flex justify-between items-center bg-white p-2 rounded border border-stone-100 animate-fade-in-down">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-stone-400 font-mono">[${item.timestamp}]</span>
+                            <span class="text-sm font-medium text-stone-800">${item.icon} ${item.name}</span>
+                        </div>
+                        <span class="text-xs font-bold text-stone-600">+${item.time} min</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function animateCounter(finalValue) {
+            const display = document.getElementById('total-ge-display');
+            const start = parseInt(display.innerText);
+            const duration = 500;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease out quart
+                const ease = 1 - Math.pow(1 - progress, 4);
+                
+                const current = Math.floor(start + (finalValue - start) * ease);
+                display.innerText = current;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        function resetData() {
+            if(confirm("모든 데이터를 초기화하시겠습니까?")) {
+                state = {
+                    totalGE: 0,
+                    stats: { VIT: 0, INT: 0, STR: 0, LUK: 0 },
+                    questCounts: { Common: 0, Uncommon: 0, Rare: 0, Epic: 0, Legendary: 0 },
+                    history: []
+                };
+                updateUI();
+                updateCharts();
+                document.getElementById('total-ge-display').innerText = "0";
+            }
+        }
+
+        // --- CHARTS ---
+        let statsChartInstance;
+        let geSourceChartInstance;
+
+        function initCharts() {
+            // Radar Chart (Stats)
+            const ctxStats = document.getElementById('statsChart').getContext('2d');
+            statsChartInstance = new Chart(ctxStats, {
+                type: 'radar',
+                data: {
+                    labels: ['VIT (생활습관)', 'INT (지능)', 'STR (신체)', 'LUK (도전)'],
+                    datasets: [{
+                        label: '플레이어 능력치',
+                        data: [0, 0, 0, 0], // Initial data
+                        backgroundColor: 'rgba(234, 179, 8, 0.2)', // Yellow-500 transparent
+                        borderColor: 'rgba(234, 179, 8, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(234, 179, 8, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(234, 179, 8, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e5e7eb' },
+                            grid: { color: '#e5e7eb' },
+                            pointLabels: {
+                                font: { family: 'Noto Sans KR', size: 12, weight: 'bold' },
+                                color: '#44403c'
+                            },
+                            ticks: { display: false, stepSize: 1 },
+                            suggestedMin: 0,
+                            suggestedMax: 5 // Start scale
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Doughnut Chart (GE Source)
+            const ctxGe = document.getElementById('geSourceChart').getContext('2d');
+            geSourceChartInstance = new Chart(ctxGe, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#d1d5db', // Gray 300
+                            '#86efac', // Green 300
+                            '#93c5fd', // Blue 300
+                            '#d8b4fe', // Purple 300
+                            '#fde047'  // Yellow 300
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Noto Sans KR', size: 11 }, boxWidth: 10 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} min`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update Radar Data
+            statsChartInstance.data.datasets[0].data = [
+                state.stats.VIT,
+                state.stats.INT,
+                state.stats.STR,
+                state.stats.LUK
+            ];
+            // Dynamic Scale Adjustment for Radar
+            const maxStat = Math.max(...Object.values(state.stats));
+            statsChartInstance.options.scales.r.suggestedMax = maxStat + 2;
+            statsChartInstance.update();
+
+            // Update Doughnut Data
+            geSourceChartInstance.data.datasets[0].data = [
+                state.questCounts.Common,
+                state.questCounts.Uncommon,
+                state.questCounts.Rare,
+                state.questCounts.Epic,
+                state.questCounts.Legendary
+            ];
+            geSourceChartInstance.update();
+        }
+
+    </script>
+</body>
+</html>
